@@ -1,22 +1,8 @@
-"""Modal v23 — Baldan / Nohra & Dufour 2024 §7.2.1 com HARD BC via LIFT.
+"""Train PINN and Mix2Funn (unsupervised) on the 2D magnetostatic problem.
 
-Replica fiel da arquitetura proposta no paper:
-    H(x) = f(x) * d_0(x) + V(x)
-onde:
-    f(x)      = saida bruta da rede (2 componentes f_x, f_z)
-    d_0(x)    = 1 - exp(-10 * D(x)), D distancia ao bordo do quadrado unitario
-    V(x)     = (0, 1)  (campo uniforme de fundo, satisfaz Hx=0, Hz=1 no bordo)
-
-Loss SEM termo de BC (BC eh exata por construcao):
-    L = mean(|curl H|^2) + mean(|div(mu H)|^2)
-Pesos iguais 1:1.
-
-Protocolo de otimizacao do paper:
-    Adam 5000 iters (lr=1e-3) -> L-BFGS 100 outer x max_iter=50 (= 5000 calls)
-
-N_col = 8000 LHS em [0,1]^2.
-
-Output volume tcc:final/baldan_v23/by_label/{label}.json + {label}_pred.npz.
+Hard boundary conditions are imposed via a lift function f(x) * d_0(x) + V(x)
+so that the residual loss focuses on the Maxwell equations
+(curl H = 0, div(mu H) = 0) inside the domain.
 """
 
 import json

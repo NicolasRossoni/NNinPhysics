@@ -1,39 +1,28 @@
-# Experiment 05 — Viscous Burgers equation
+# Experimento 5 — Equação de Burgers viscosa
 
-Produces **Figure 8** of `monograph.pdf`.
+> Produz a **Figura 8** de `monograph.pdf`.
 
-## Physical problem
+## Problema
 
-One-dimensional viscous Burgers equation,
+$$\left\{\begin{array}{l}
+u_t + u\,u_x = \nu\,u_{xx}, \\
+u(x, 0) = -\sin(\pi x), \\
+u(\pm 1, t) = 0,
+\end{array}\right.
+\qquad \nu = 0{,}01/\pi, \quad x \in [-1, 1], \quad t \in [0, 1].$$
 
-$$
-u_t + u\,u_x = \nu\,u_{xx}, \qquad
-u(x, 0) = -\sin(\pi x), \qquad u(\pm 1, t) = 0,
-$$
+Treino estritamente não-supervisionado (resíduo da EDP mais condições inicial e de contorno; sem termo de regressão). A referência numérica usada na figura é gerada por Runge–Kutta de quarta ordem em uma grade de diferenças finitas.
 
-with $\nu = 0.01 / \pi$, on $x \in [-1, 1]$ and $t \in [0, 1]$. The initial sinusoid steepens into a viscous-shock-like profile near $x = 0$ as $t \to 1$.
+## Arquivos
 
-## Configurations trained
+- `run.py` — despacha PINN $6\times64$ e MixFunn-sof $3\times6$ no Modal.
+- `mixfunn.py` — camada Mix2Funn.
 
-- **PINN 6×64** with $\tanh$ activations.
-- **MixFunn-sof 3×6** with the standard analytic basis $\{ \sin, \cos, e^z, \log|z|, z, z^2, 1 \}$ and second-order cross-products enabled.
-
-Both networks are trained **fully unsupervised** using the PDE residual plus the initial- and boundary-condition penalties — no reference solution enters the loss. The reference solution shown in Figure 8 (for comparison only) is computed offline with a fourth-order Runge–Kutta time-stepper on a finite-difference spatial grid.
-
-## Reproduce
+## Reprodução
 
 ```bash
-modal run run.py                                # trains PINN + MixFunn-sof in parallel
+modal run run.py
 modal volume get tcc /final/burgers_v22 ./results
 ```
 
-Total runtime ≈ 15 min wall on T4. Cost ≈ $0.15 of Modal credit.
-
-## Files
-
-- `run.py` — Modal entrypoint for both architectures.
-- `mixfunn.py` — MixFunn implementation.
-
-## Reference
-
-Problem statement and reference numerical solution as in RAISSI et al. (2019).
+Tempo: ~15 min de wall-time em T4. Custo: ~$0{,}15.

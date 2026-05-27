@@ -1,14 +1,7 @@
-"""Schrod v22 — Batch 3: Mix probe + matching PINN.
+"""Schrodinger sprint, batch 3: Mix2Funn configurations and a paired PINN.
 
-Batch 2 outcome:
-  - PINN 8x100 nsup 40k -> L2|psi|=0.031 (best)
-  - PINN 6x100 nsup 30k -> L2|psi|=0.044
-  - PINN 8x100 nsup 40k curriculum -> L2|psi|=0.052 (curriculum HURT — first half
-    sees only [0,pi/4], so net is biased to short-time, then has to relearn)
-  - All Mix configs killed by 1700s timeout (autograd 2nd-order on Mix is slow)
-
-Batch 3: shorter Mix iters to fit timeout + measurement runs.
-Goal: find best Mix L2 at iters X; we already have PINN 20k/30k/40k landmarks.
+Adds Mix2Funn at multiple widths and a PINN run with matched iteration
+count for direct comparison.
 """
 
 import json

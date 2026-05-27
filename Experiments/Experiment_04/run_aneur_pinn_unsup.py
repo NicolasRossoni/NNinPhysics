@@ -1,18 +1,8 @@
-"""Modal: PINN 3D NS UNSUPERVISIONADO no aneurisma ANEUMO.
+"""Stand-alone unsupervised PINN training on the ANEUMO geometry.
 
-Sem leak: u_bc, v_bc, w_bc, p NÃO usam dados ANEUMO no interior. Apenas:
-  - BC inlet via xyz_inlet (anatomia conhecida — equivale a impor a velocidade
-    medida no inlet pelo MRI/CT, BC física padrão)
-  - BC wall (no-slip u=0)
-  - Outlet pressure = 0 (referência)
-
-Loss = PDE residual (NS 3D + continuidade) + soft penalty wall (u=0) +
-       soft penalty inlet (u=u_aneumo[inlet])
-
-A "verdade" ANEUMO só entra na AVALIAÇÃO (depois do treino).
-
-ANEUMO npz keys: xyz (129693,3), u, v, w, p, sdf, xyz_inlet (716,3), simple_inlet (7,).
-SDF é positivo no interior; SDF=0 no contorno da malha fluida.
+Uses only the inlet velocity profile and the wall mask as boundary
+conditions; the residual is the Navier--Stokes PDE evaluated at interior
+collocation points.
 """
 import json
 import time

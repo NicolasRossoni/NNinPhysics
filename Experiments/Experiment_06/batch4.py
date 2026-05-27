@@ -1,10 +1,7 @@
-"""Schrod v22 — Batch 4: matched-iters PINN for fair pairing with best Mix.
+"""Schrodinger sprint, batch 4: matched-iters PINN for the best Mix2Funn.
 
-Best Mix so far: mix_3x6_sof_nsup_10k -> L2|psi|=0.383 (10k iters).
-We have PINN at iters {15k, 20k, 30k, 40k}; missing 10k.
-This batch adds:
-  - PINN 8x100 nsup 10k   (matched iters with best Mix)
-  - mix_3x6_sof_nsup_15k  (push Mix at +50% iters under timeout headroom)
+Adds the missing PINN iteration count needed to pair with the best
+Mix2Funn run for the figure in the monograph.
 """
 
 import json

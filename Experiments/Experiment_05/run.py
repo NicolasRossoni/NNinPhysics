@@ -1,14 +1,7 @@
-"""Modal sprint v22: STRICTLY NON-SUPERVISED PINN vs MixFunn for Burgers viscoso.
+"""Train PINN and Mix2Funn (unsupervised) on the viscous Burgers equation.
 
-EDP: u_t + u u_x = (0.01/pi) u_xx, x in [-1, 1], t in [0, 1]
-CI:  u(x, 0) = -sin(pi x)
-BC:  u(-1, t) = u(1, t) = 0
-
-NSUP-only: loss = L_pde + lambda_ic * L_ic + lambda_bc * L_bc.
-Reference: pseudo-spectral Fourier (N=256) + RK4 (dt=1e-4). USED ONLY POST-TRAIN
-to compute L^2 for reporting. ABSOLUTELY NO supervised term sneaks into the loss.
-
-Configs are passed as keyword dicts; entrypoints in this file dispatch batches.
+Loss = PDE residual + initial-condition + boundary-condition penalties.
+No reference solution is fed during training.
 """
 
 from __future__ import annotations

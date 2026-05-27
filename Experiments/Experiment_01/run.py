@@ -1,12 +1,7 @@
-"""Modal v14 Kovasznay com BC Coons em TUDO + sweep arquitetural completo + Mix 1x1 sof=True extra + pruning novo novo.
+"""Train PINN and Mix2Funn on the Kovasznay flow.
 
-Mudancas vs v13:
-  - BC sempre Coons (sem leak)
-  - Sweep arquitetural completo Tab 2 (9 PINN + 9 Mix sof=False)
-  - 1 job extra Mix 1x1 sof=True
-  - 1 job extra Mix 1x1 sof=True com pruning iterativo
-
-Total: 31 jobs Kovasznay + 1 prune = 32 jobs
+Dispatches every configuration in CFGS as a separate Modal container,
+saves checkpoints and metrics to the `tcc` Modal volume.
 """
 
 import json

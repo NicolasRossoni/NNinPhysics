@@ -1,13 +1,8 @@
-"""Treinar PINN + MixFunn supervisionado contra ANEUMO case 4 m=0.002.
+"""Train PINN and Mix2Funn on the ANEUMO aneurysm geometry.
 
-Ground truth: tcc:final/aneurisma_real/case_AN4_m002.npz
-  xyz (N,3) [mm], u, v, w (N,) [m/s], p (N,) [Pa], sdf (N,) [mm]
-
-Saídas:
-  tcc:final/aneurisma_real/pinn_pred.npz
-  tcc:final/aneurisma_real/mix_pred.npz
-    chaves: xyz, u_pred, v_pred, w_pred, p_pred, train_idx, test_idx,
-            history (lista de dicts step/loss_train/loss_val)
+Loops over the nine configurations listed in the monograph table
+(varying architecture, supervision ratio, and network family) and saves
+each trained model + metrics to the `tcc` Modal volume.
 """
 import json
 from pathlib import Path
@@ -190,7 +185,7 @@ def train_mix():
     X_train = X_t[idx_train]; Y_train = Y_t[idx_train]
     X_val = X_t[idx_val]; Y_val = Y_t[idx_val]
 
-    # MixFunn paper-fiel: NL=2, NW=2, sof=True
+    # MixFunn configuration: NL=2, NW=2, second-order on
     mix = Mix2Funn(n_in=3, n_out=4, n_layers=2, n_hidden=2,
                    use_softmax=True, second_order_function=True,
                    T_init=5.0, T_final=0.05, n_anneal_epochs=8000).to(device)

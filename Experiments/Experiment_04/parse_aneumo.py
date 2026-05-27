@@ -1,12 +1,5 @@
-"""Parse ANEUMO real_data/cfd_data/m=0.002/4.npz e sobe pra Modal volume.
-
-ANEUMO format (descoberto via Data_preprocessing/cfdPreprocess.py):
-  array_internal: xyz puvw columns (xyz em metros)
-  npz packed:
-    X_sup: shape (1, N, 4) = [x, y, z, sdf]  (xyz em metros)
-    Y_sup: shape (1, N, 4) = [p, u_shifted, v, w]  (u_shifted = u - 0.5)
-    Simple_inlet: (1, 7) = [cx, cy, cz, nx, ny, nz, flow_rate]
-    X_inlet: (1, M, 3) = inlet points
+"""Download the ANEUMO dataset (case AN4, mass-flow factor 0.002) and upload
+the parsed point cloud + reference fields to the `tcc` Modal volume.
 """
 import json
 from pathlib import Path

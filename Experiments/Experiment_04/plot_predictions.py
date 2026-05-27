@@ -1,7 +1,5 @@
-"""Gerar galeria de figuras para aneurisma.pdf v3.
-
-Lê GT (case_AN4_m002.npz), PINN pred (pinn_pred.npz), Mix pred (mix_pred.npz)
-e history JSONs. Produz 20+ figuras estilo gallery em PNG.
+"""Generate the 3D-panel and central-plane figures comparing the
+ground-truth ANEUMO fields against the trained PINN and Mix2Funn predictions.
 """
 import json
 from pathlib import Path

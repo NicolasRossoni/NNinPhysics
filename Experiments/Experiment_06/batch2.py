@@ -1,17 +1,7 @@
-"""Schrod v22 — Batch 2.
+"""Schrodinger sprint, batch 2: PINN at higher iteration counts.
 
-Batch 1 outcome:
-  - PINN 4x64 nsup 30k -> L2|psi|=0.167 (still decreasing, monotone, not converged)
-  - PINN 8x100 nsup 20k -> L2|psi|=0.078 (still decreasing fast)
-  - Mix 3x3/3x6 sof -> KILLED by 1800s timeout (too many iters)
-
-Batch 2 plan:
-  - PINN 8x100 nsup 40k  -- extend the clear winner
-  - PINN 6x100 nsup 30k  -- middle ground (cheaper per iter)
-  - PINN 8x100 nsup 40k curriculum (train [0, t*=pi/4] for first 50%, then full)
-  - Mix 3x3 sof 20k  -- inside timeout budget
-  - Mix 3x6 sof 15k  -- inside timeout budget
-  - Mix 4x4 sof 15k  -- alternative
+Continues exploration with PINN configurations that needed longer
+training based on the loss curves from batch 1.
 """
 
 import json

@@ -1,13 +1,5 @@
-"""Modal v23 refine — mais LBFGS iters + Mix temp anneal durante LBFGS.
-
-Fixes vs v23 (run.py):
-- LBFGS outer aumentado para 300 (= 15000 effective grad calls)
-- Mix net chama update_temperature_from_epoch tambem em LBFGS para escapar
-  do plateau (ja estava em T_final=0.05 no fim do Adam, entao pinning em
-  T_final). Tambem testamos 4x16 width=16 (mais capacidade).
-- PINN tambem com 300 LBFGS outer.
-
-Mesmo lift + mesmo FEM. Mesmas BCs.
+"""Continue training the Mix2Funn from `run.py` with extra L-BFGS iterations
+and a sharper softmax-temperature schedule.
 """
 
 import json

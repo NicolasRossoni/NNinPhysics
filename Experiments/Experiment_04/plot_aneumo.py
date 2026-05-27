@@ -1,6 +1,4 @@
-"""Plots do campo CFD real ANEUMO: 3D scatter + slices interpoladas +
-streamlines no plano central.
-"""
+"""Visualise the raw ANEUMO point cloud and reference fields."""
 import json
 from pathlib import Path
 import modal

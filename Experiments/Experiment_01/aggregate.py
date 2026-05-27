@@ -1,20 +1,4 @@
-"""Agrega resultados do Modal e gera figuras + tabelas para §3.2 NS Kovasznay.
-
-Entrada (em ordem de preferencia):
-  1. /tmp/ns_kovasznay_results.json (escrito por main() do run.py)
-  2. Volume tcc: final/ns_kovasznay/by_label/*.json (fallback incremental)
-
-Figuras geradas em Code/reports/latex/tcc/figures/:
-  - kov_arch_3redes_pinn.png        (3 melhores PINN: malha + erro)
-  - kov_arch_3redes_mix.png         (3 melhores MixFunn)
-  - kov_loss_4curves.png            (sup/nsup PINN e Mix, 4 curvas)
-  - kov_loss_per_component.png      (residuo NS, divergencia)
-  - kov_sup_vs_unsup.png            (4 paineis: barras L2 por seed)
-  - kov_interp_extrap.png           (interp vs extrap: erro espacial)
-  - kov_compare.png                 (3 heatmaps |u| + cortes em y)
-
-Tabelas em /tmp/kov_tables.tex.
-"""
+"""Aggregate per-seed training metrics into the tables shown in the monograph."""
 
 from __future__ import annotations
 

@@ -1,11 +1,5 @@
-"""Validacao 4-camadas do campo CFD ANEUMO (caso real anatomic, point cloud).
-
-Estrategia: como o campo eh um point cloud (nao grid), uso k-NN local pra
-estimar:
-  A) divergencia local (least-squares via gradiente local de ordem 1)
-  B) fluxo atraves de slices perp ao eixo principal
-  C) Poiseuille fit em regiao proximal (longe do sac)
-  D) vorticidade no sac
+"""Sanity-check the parsed ANEUMO data and the trained model predictions
+by computing field statistics and per-channel MSE against the reference.
 """
 import json
 from pathlib import Path

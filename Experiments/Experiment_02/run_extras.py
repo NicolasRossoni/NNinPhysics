@@ -1,5 +1,6 @@
-"""Modal v19-extras: 6 PINN regularizacao Coons (G2.15) + 2 ref Eficiencia 4x16/2x1 (G2.16).
-8 jobs paralelos em nicolas-quinta.
+"""Kovasznay regularization sweep: dropout and sub-sampling combinations
+on the PINN 4x32 and Mix 3x1 baselines. Dispatches all configurations as
+parallel Modal containers.
 """
 
 import json
@@ -249,7 +250,7 @@ def run():
 
     configs = []
 
-    # G2.15: 6 PINN regularizacao Coons
+    # PINN regularization sweep
     seed = 21
     configs.append(("reg_pinn_baseline", "pinn", 4, 32, "nsup", seed, 0.00, 1.00, LR_PINN, iters_pinn, False))
     configs.append(("reg_pinn_drop10",   "pinn", 4, 32, "nsup", seed, 0.10, 1.00, LR_PINN, iters_pinn, False))
@@ -258,7 +259,7 @@ def run():
     configs.append(("reg_pinn_sub50",    "pinn", 4, 32, "nsup", seed, 0.00, 0.50, LR_PINN, iters_pinn, False))
     configs.append(("reg_pinn_combo",    "pinn", 4, 32, "nsup", seed, 0.10, 0.50, LR_PINN, iters_pinn, False))
 
-    # G2.16: 2 ref Eficiencia
+    # Efficiency baseline configurations
     configs.append(("eff_pinn_4x16",     "pinn", 4, 16, "nsup", seed, 0.00, 1.00, LR_PINN, iters_pinn, False))
     configs.append(("eff_mix_2x1",       "mix",  2,  1, "nsup", seed, 0.00, 1.00, LR_MIX,  iters_mix,  False))
 

@@ -1,54 +1,39 @@
-# Experiment 04 — 3D intracranial aneurysm flow (ANEUMO)
+# Experimento 4 — Aneurisma intracraniano 3D (ANEUMO)
 
-Produces **Table 5**, **Figure 6** and **Figure 7** of `monograph.pdf`.
+> Produz a **Tabela 5**, a **Figura 6** e a **Figura 7** de `monograph.pdf`.
 
-## Physical problem
+## Problema
 
-Steady incompressible Navier–Stokes in 3D on a real intracranial aneurysm geometry from the **ANEUMO** dataset (Li et al., 2025), case `AN4` at mass-flow factor $m = 0.002$. The domain is a point cloud (~129k points) reconstructed from a real patient's cerebrovascular tree; reference fields (velocity and pressure) were pre-computed by the dataset authors with a commercial CFD solver.
+Navier–Stokes incompressível 3D estacionário em uma geometria anatômica real (caso `AN4` do *dataset* ANEUMO, fator de vazão $m = 0{,}002$):
 
-The governing equations are
+$$\left\{\begin{array}{l}
+(\mathbf{u} \cdot \nabla)\mathbf{u} + \nabla p / \rho - \nu\,\nabla^2 \mathbf{u} = 0, \\
+\nabla \cdot \mathbf{u} = 0, \\
+\mathbf{u}|_{\text{parede}} = 0, \quad
+\mathbf{u}|_{\text{entrada}} = \mathbf{u}_{\text{fis}}, \quad
+p|_{\text{saída}} = 0.
+\end{array}\right.$$
 
-$$
-(\mathbf{u} \cdot \nabla)\mathbf{u} + \nabla p / \rho - \nu \nabla^2 \mathbf{u} = 0, \qquad
-\nabla \cdot \mathbf{u} = 0,
-$$
+Nuvem de pontos com aproximadamente $129\,000$ amostras de um paciente real. Os campos de referência $(\mathbf{u}, p)$ vêm de uma simulação CFD comercial fornecida no próprio *dataset*.
 
-with $\mathbf{u} = 0$ on the vessel wall, the physiological velocity profile from the dataset at the inlet, and $p = 0$ at the outlet.
+## Arquivos
 
-## Configurations trained
+- `parse_aneumo.py` — baixa o *dataset* ANEUMO, extrai o caso `AN4` e sobe a nuvem de pontos para o volume Modal.
+- `train_networks.py` — treina, em paralelo, as nove configurações da Tabela 5 (PINN e MixFunn em três regimes de supervisão: 0%, 25%, 50% e 100%).
+- `run_aneur_pinn_unsup.py` — variante stand-alone do treino não-supervisionado da PINN $8\times128$.
+- `plot_predictions.py` — gera a Figura 6 (painel 3D) e a Figura 7 (corte no plano $z \approx 39{,}75$ mm).
+- `plot_aneumo.py` — visualizações do *dataset* bruto.
+- `validate_aneumo.py` — verificação numérica das predições contra a referência.
 
-Nine configurations spanning unsupervised, partially-supervised, and fully-supervised regimes:
-
-- PINN 5×64, MixFunn 3×1, MixFunn-sof 3×1 at **0%** supervision (unsupervised).
-- PINN 8×128 at **0%** supervision (larger unsupervised attempt).
-- PINN 5×64, MixFunn-sof 2×2 at **25%** and **50%** supervision.
-- PINN 5×64 and MixFunn-sof 2×2 at **100%** supervision (best-performing, shown in figures).
-
-See §3.2 of the monograph for the discussion of why the unsupervised regime fails at the cerebrovascular Reynolds number with the budget used here, and the pointers to future work (curriculum learning over $\mathrm{Re}$).
-
-## Reproduce
+## Reprodução
 
 ```bash
-python parse_aneumo.py           # downloads ANEUMO dataset and extracts case AN4
-modal run train_networks.py      # trains every configuration in Table 5
+modal run parse_aneumo.py
+modal run train_networks.py
 modal volume get tcc /final/aneurisma ./results
-python plot_predictions.py       # generates Figure 6 (3D panel) and Figure 7 (central plane)
-python validate_aneumo.py        # sanity-checks predictions against reference fields
+python plot_predictions.py
 ```
 
-Total runtime ≈ 60–90 min wall on T4 across the nine containers. Cost ≈ $1 of Modal credit.
+Tempo: ~60–90 min de wall-time em T4 (containers paralelos). Custo: ~$1{,}00.
 
-The ANEUMO dataset is openly available at https://arxiv.org/abs/2505.14717.
-
-## Files
-
-- `parse_aneumo.py` — downloads and parses the ANEUMO point cloud for case `AN4`.
-- `train_networks.py` — Modal entrypoint dispatching the nine training jobs.
-- `run_aneur_pinn_unsup.py` — standalone unsupervised training script for the PINN.
-- `plot_predictions.py` — generates the 3D panel (Figure 6) and the central plane slice (Figure 7).
-- `plot_aneumo.py` — visualisations of the raw dataset (geometry + reference field).
-- `validate_aneumo.py` — numeric validation against ground truth.
-
-## Reference
-
-Patient data and CFD reference fields from LI et al. (2025); architecture choice and partial-supervision sweep follow the structure of RAISSI et al. (2018, Hidden Fluid Mechanics) adapted to the ANEUMO geometry.
+ANEUMO: <https://arxiv.org/abs/2505.14717>

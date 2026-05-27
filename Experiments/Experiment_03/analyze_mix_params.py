@@ -1,12 +1,5 @@
-"""Analise post-hoc do state_dict da Mix 3x1 sof=False treinada com BC Coons.
-
-Identifica funcoes atomicas dominantes (alphas relevantes via softmax),
-imprime tabela formatada para integracao no LaTeX.
-
-Funcao atomica conjunta: {sin, cos, expN(-0.01|x|), expP(0.01|x|), sqrt, log, id}
-
-Uso:
-    python analyze_mix_params.py
+"""Inspect the trained Mix 3x1 state dict and print the dominant atomic
+basis functions per neuron, formatted for inclusion in the monograph.
 """
 import json
 import math

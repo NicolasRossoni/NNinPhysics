@@ -1,15 +1,7 @@
-"""Schrod v22 — NSUP sprint, Batch 1.
+"""Schrodinger sprint, batch 1: initial PINN configurations.
 
-Strictly non-supervised PINN/MixFunn for Nonlinear Schrodinger (Raissi 2017).
-Loss = L_pde + lambda * (L_ic + L_bc). NO supervised term.
-
-Batch 1: 4 configs scoped within $1.5 (timeout 1500s):
-  - PINN 4x64 nsup, 30k iters, lr=1e-3
-  - PINN 8x100 nsup, 20k iters, lr=1e-3
-  - Mix 3x3 sof, 30k iters, lr=1e-2
-  - Mix 3x6 sof, 20k iters, lr=1e-2
-
-Reference ref.npz copied lazily from schrod_v21/ref.npz (same grid).
+Sweeps PINN width and depth on the nonlinear Schrodinger equation,
+trained unsupervised (residual + IC + BC only).
 """
 
 import json

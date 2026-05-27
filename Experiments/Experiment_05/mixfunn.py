@@ -1,41 +1,10 @@
-"""Mix2Funn — template canonico reimplementado do zero (paper-fiel).
+"""Mix2Funn layer used by the experiments in this repository.
 
-Fonte canonica: Farias, T. de S.; de Lima, G. G.; Maziero, J.; Villas-Boas, C. J.
-"MixFunn: A Neural Network for Differential Equations with Improved Generalization
-and Interpretability." arXiv, 2025. Equacoes (3-7).
-
-Decisoes de implementacao 2026-05-12 (vide Claude/4-RAM.md):
-
-- Pre-ativacao quadratica: tril ESTRITO (exclui diagonal x_i^2), alinhando com
-  paper eq. 5 ("U has dimension 1 x N(N-1)/2") e com github dos autores.
-  Para n_in=1: zero termos quadraticos (apenas linear). Para n_in=2: 1 termo
-  cruzado (x_1 x_2). Decisao tomada em 2026-05-12 noite apos primeira rodada
-  com tril inclusivo (offset=0) sofrer overflow em ExpP(0.01·|s|) para t in [0, 40]
-  no oscilador, com s = t^2 = 1600 -> exp(16) ~ 9e6 desestabilizou Adam.
-  Trocar para estrito remove esse termo no n_in=1 e estabiliza o treino.
-  Contagens: Mix2Funn(1,1,1)=21 params, Mix2Funn(2,1,1)=35 params.
-
-- second_order_function (produtos funcao-com-funcao): IMPLEMENTADO como flag
-  opcional. Quando True, a camada computa outer product das Q saidas das funcoes
-  e usa a triangular superior como features adicionais com seus proprios alphas.
-  Necessario para representar solucoes que sao PRODUTOS (cos(t)*exp(-0.05t) no
-  oscilador amortecido, paper §IV.A.3 expressao 9). Sem isso a rede converge para
-  solucao trivial x(t)~0. NAO esta em paper §III mas esta no github dos autores e
-  reproduz os 77 params da Tab. I. Documentado como extensao do github.
-- Softmax com sinal POSITIVO (paper eq. 7). Github usa `softmax(-α/T)` no codigo.
-- Annealing de T implementado (paper §III.C, schedule linear T_init->T_final).
-- Pruning de magnitude implementado com MASCARA PERSISTENTE (paper §III.E:
-  "mask effectively nullifies the parameters" — mascara registrada como buffer +
-  re-aplicada apos cada optimizer.step para sobreviver a gradientes nao-zero).
-- n_layers>1 (modo empilhado) e EXTENSAO PROPRIA do TCC, NAO esta no paper —
-  cada Mix2FunnLayer reaplica o quadratico+funcoes na saida da anterior.
-  O paper so descreve 1 camada Mix2Funn. Documentar como achado se usado.
-
-Constantes pragmaticas adotadas do github (sem suporte explicito no paper):
-- 0.01 nos exp para evitar overflow em dominios grandes.
-- 0.01 no sqrt para derivada finita em x=0.
-- 0.1 no log para evitar log(0).
-Cada uma e documentada inline.
+A Mix2Funn neuron computes a softmax-weighted combination of a fixed
+analytic basis ({sin, cos, exp+|.|, exp-|.|, sqrt, log, identity}) of an
+affine pre-activation, with an optional quadratic pre-mixing of the inputs
+and optional second-order cross-products of basis outputs. Stacking is
+supported via `n_layers > 1`.
 """
 
 from __future__ import annotations
@@ -47,7 +16,7 @@ import torch.nn.functional as F
 
 
 # =========================================================================
-# Funcoes da base — Q = 7 (paper §III.B)
+# Base functions (Q = 7)
 # =========================================================================
 
 class Sin(nn.Module):
@@ -61,19 +30,19 @@ class Cos(nn.Module):
 
 
 class ExpN(nn.Module):
-    """exp(-0.01 * |x|). Escala 0.01 do github — paper nao especifica."""
+    """exp(-0.01 * |x|)."""
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.exp(-0.01 * torch.abs(x))
 
 
 class ExpP(nn.Module):
-    """exp(0.01 * |x|). Escala 0.01 do github — sem ela, overflow para |x| ~ 20."""
+    """exp(0.01 * |x|)."""
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return torch.exp(0.01 * torch.abs(x))
 
 
 class Sqrt(nn.Module):
-    """sqrt(0.01 + ReLU(x)). Constante 0.01 do github — evita derivada infinita em x=0."""
+    """sqrt(0.01 + ReLU(x)) — finite derivative at x=0."""
     def __init__(self):
         super().__init__()
         self.relu = nn.ReLU()
@@ -83,7 +52,7 @@ class Sqrt(nn.Module):
 
 
 class Log(nn.Module):
-    """log(0.1 + ReLU(x)). Constante 0.1 do github — evita log(0)."""
+    """log(0.1 + ReLU(x)) — defined at x=0."""
     def __init__(self):
         super().__init__()
         self.relu = nn.ReLU()
@@ -97,40 +66,37 @@ class Id(nn.Module):
         return x
 
 
-# Conjunto canonico Q=7 (ordem fixa para reprodutibilidade).
 BASE_FUNCTIONS: list[nn.Module] = [Sin(), Cos(), ExpN(), ExpP(), Sqrt(), Log(), Id()]
 BASE_FUNCTION_NAMES: list[str] = ["sin", "cos", "expN", "expP", "sqrt", "log", "id"]
 Q: int = len(BASE_FUNCTIONS)
 
 
 # =========================================================================
-# Camada Mix2Funn — uma operacao (paper-fiel, eq. 5-7)
+# Single Mix2Funn layer
 # =========================================================================
 
 class Mix2FunnLayer(nn.Module):
-    """Uma camada Mix2Funn (paper eq. 3 + 6 + 7).
+    """One Mix2Funn layer.
 
     Forward:
-      1. Pre-ativacao quadratica para cada uma das Q funcoes:
-           s_i = b_i + W_i x + U_i vec(tril(x x^T))
-         tril ESTRITO (offset=-1, exclui diagonal x_i^2): apenas cruzados
-         x_i x_j com i > j. Alinha com paper eq. 5 ("U has dimension N(N-1)/2").
-         Para N=1: zero termos quadraticos, so a parte linear de x.
-         Para N=2: 1 termo cruzado (x_1 x_2).
-      2. f_i(s_i) para cada funcao.
-      3. Combinacao linear: a_k = sum_i w_{k,i} f_i(s_i).
-         w pode vir de softmax(alpha / T) (paper eq. 7) ou de Parameter livre.
+      1. Quadratic pre-activation (strict lower-triangular, no diagonal):
+           s_i = b_i + W_i x + U_i vec(stril(x x^T))
+         For N=1 inputs the quadratic block is empty (linear only); for
+         N=2 it contributes one cross term x_1 x_2.
+      2. Apply each base function f_i to its own s_i.
+      3. Linear combination with softmax-normalised weights (or, if
+         `use_softmax=False`, with free weights).
 
     Args:
-        n_in: dimensao de entrada.
-        n_out: dimensao de saida.
-        use_softmax: se True, w vem de softmax(alpha/T) com T anelado.
-                     Se False, w e Parameter livre (sem normalizacao).
-        T_init: T inicial (so usado se use_softmax=True).
-        second_order_function: se True, adiciona produtos f_i*f_j (i<=j, Q(Q+1)/2 termos)
-                               como features adicionais. Necessario para representar
-                               solucoes que sao PRODUTOS das funcoes da base. Extensao
-                               do github dos autores (nao em paper §III). Default True.
+        n_in:                  input dimension.
+        n_out:                 output dimension.
+        use_softmax:           if True, the combination weights come from
+                               softmax(alpha / T) and T can be annealed.
+        T_init:                initial softmax temperature.
+        second_order_function: if True, the combination is enriched with
+                               pairwise products f_i * f_j of basis outputs.
+        dropout:               dropout probability applied on the features.
+        init_alpha_std:        std of Gaussian init for the alpha logits.
     """
 
     def __init__(
@@ -152,11 +118,7 @@ class Mix2FunnLayer(nn.Module):
         self.init_alpha_std = init_alpha_std
         self.dropout = nn.Dropout(p=dropout) if dropout > 0.0 else None
 
-        # Pre-ativacao quadratica: tril ESTRITO (offset=-1) — exclui diagonal.
-        # Para N=n_in, ha N + N(N-1)/2 features (linear + cruzados x_i x_j, i>j).
-        # Paper eq. 5: "U has dimension 1 x N(N-1)/2" — alinhamos com isso.
-        # Para N=1: zero termos quadraticos (so o linear t).
-        # Para N=2: 1 termo cruzado (x_1 x_2).
+        # Strict-lower-triangular indices for the quadratic pre-activation.
         self._n_quad = n_in * (n_in - 1) // 2
         self._n_feat = n_in + self._n_quad
 
@@ -164,50 +126,38 @@ class Mix2FunnLayer(nn.Module):
         self.register_buffer("tril_i", i_idx)
         self.register_buffer("tril_j", j_idx)
 
-        # Uma camada Linear por funcao: input n_feat -> output n_out.
-        # Cada uma com seus proprios pesos (paper §III.B: "each function with its own preact").
+        # One Linear projection per base function.
         self.projections = nn.ModuleList(
             [nn.Linear(self._n_feat, n_out) for _ in range(Q)]
         )
 
-        # Total de features finais: Q primeiros-order + (se on) Q*(Q+1)/2 produtos f_i*f_j.
+        # Optional second-order cross-products of base outputs.
         self._n_prod = Q * (Q + 1) // 2 if second_order_function else 0
         self._n_total = Q + self._n_prod
 
-        # Indices da triangular superior INCLUSIVA para outer product das saidas funcoes.
         if second_order_function:
             ti, tj = torch.triu_indices(Q, Q, offset=0).unbind(0)
             self.register_buffer("prod_i", ti)
             self.register_buffer("prod_j", tj)
 
-        # Pesos da combinacao final. Forma [n_out, n_total].
+        # Combination weights.
         if use_softmax:
-            # alpha sao os logits aprendiveis; w = softmax(alpha / T).
-            # init_alpha_std=0 (default): zeros (softmax inicial uniforme).
-            # init_alpha_std>0: pequena perturbacao randomica para quebrar simetria.
             if init_alpha_std > 0.0:
                 self.alpha = nn.Parameter(torch.randn(n_out, self._n_total) * init_alpha_std)
             else:
                 self.alpha = nn.Parameter(torch.zeros(n_out, self._n_total))
-            # T comeca em T_init; pode ser atualizado via update_temperature().
             self.register_buffer("T", torch.tensor(float(T_init)))
         else:
-            # w livre.
             self.w = nn.Parameter(torch.randn(n_out, self._n_total) * 0.1)
 
-        # Inicializacao Xavier nos Linear (alinha com PINN canonica).
+        # Xavier init on the projections.
         for lin in self.projections:
             nn.init.xavier_normal_(lin.weight)
             nn.init.zeros_(lin.bias)
 
     def _quadratic_features(self, x: torch.Tensor) -> torch.Tensor:
-        """Concatena [x, vec(tril estrito(x x^T))] para um batch x de shape [B, N].
-
-        Saida: [B, N + N(N-1)/2] = [B, n_feat]. tril ESTRITO (offset=-1).
-        """
-        # Produto externo batched: [B, N, 1] @ [B, 1, N] = [B, N, N].
+        """Return [x, vec(stril(x x^T))] for a batch x of shape [B, N]."""
         xx = x.unsqueeze(-1) * x.unsqueeze(-2)
-        # Extrai triangular inferior estrita (exclui diagonal): [B, N(N-1)/2].
         xx_tril = xx[:, self.tril_i, self.tril_j]
         return torch.cat([x, xx_tril], dim=-1)
 
@@ -219,59 +169,48 @@ class Mix2FunnLayer(nn.Module):
         f_stack = torch.stack(f, dim=-1)                # [B, n_out, Q]
 
         if self.second_order_function:
-            # Outer product das saidas: [B, n_out, Q, Q].
             f_outer = f_stack.unsqueeze(-1) * f_stack.unsqueeze(-2)
-            # Triangular superior inclusiva: [B, n_out, Q(Q+1)/2].
             f_prod = f_outer[..., self.prod_i, self.prod_j]
-            # Concatena: [B, n_out, Q + Q(Q+1)/2] = [B, n_out, n_total].
             features_full = torch.cat([f_stack, f_prod], dim=-1)
         else:
             features_full = f_stack
 
-        # Dropout opcional (paper §III.D) aplicado nas features antes da combinacao.
-        # No-op se dropout=0.0; tambem no-op em eval mode (nn.Dropout cuida disso).
         if self.dropout is not None:
             features_full = self.dropout(features_full)
 
         if self.use_softmax:
             T = float(self.T)
-            w = F.softmax(self.alpha / T, dim=-1)       # [n_out, n_total], soma=1 por linha
+            w = F.softmax(self.alpha / T, dim=-1)
         else:
-            w = self.w                                  # [n_out, n_total]
+            w = self.w
 
-        # Combinacao linear: a_k = sum w_{k,m} feat_m.
         a = (features_full * w.unsqueeze(0)).sum(dim=-1)
         return a
 
     def update_temperature(self, T: float) -> None:
-        """Atualiza T do softmax. So tem efeito se use_softmax=True."""
+        """Set the softmax temperature."""
         if self.use_softmax:
             self.T.fill_(float(T))
 
 
 # =========================================================================
-# Rede Mix2Funn — suporta 1 camada (paper-puro) ou N camadas (deep)
+# Mix2Funn network (stackable)
 # =========================================================================
 
 class Mix2Funn(nn.Module):
-    """Rede Mix2Funn empilhavel.
-
-    n_layers=1: paper-puro (default).
-    n_layers>1: extensao TCC — empilha camadas Mix2Funn em sequencia.
-
-    Para n_layers>1 com n_in pequeno, a saida da primeira camada (n_out_intermediate)
-    vira a entrada da proxima. As camadas intermediarias usam o mesmo n_out_intermediate
-    para entrada e saida.
+    """Stackable Mix2Funn network.
 
     Args:
-        n_in: dimensao de entrada da rede.
-        n_out: dimensao de saida final.
-        n_layers: numero de camadas Mix2Funn empilhadas (>= 1).
-        n_hidden: dimensao das camadas intermediarias (so usado se n_layers > 1).
-        use_softmax: ativa softmax + annealing (eq. 7).
-        T_init / T_final: range do annealing linear.
-        n_anneal_epochs: numero de epocas sobre as quais T decai linearmente de T_init
-                         para T_final. None = sem annealing (T fica em T_init).
+        n_in / n_out:          input / output dimensions of the network.
+        n_layers:              number of stacked layers (>= 1).
+        n_hidden:              intermediate width (used if n_layers > 1).
+        use_softmax:           enables softmax-weighted combination.
+        T_init / T_final:      range of the linear temperature annealing.
+        n_anneal_epochs:       number of epochs over which T is annealed
+                               (None = no annealing, T stays at T_init).
+        second_order_function: enables f_i * f_j cross-products in every layer.
+        dropout:               dropout probability inside each layer.
+        init_alpha_std:        std for the alpha-logits init.
     """
 
     def __init__(
@@ -289,7 +228,7 @@ class Mix2Funn(nn.Module):
         init_alpha_std: float = 0.0,
     ):
         super().__init__()
-        assert n_layers >= 1, "n_layers deve ser >= 1"
+        assert n_layers >= 1, "n_layers must be >= 1"
         self.n_in = n_in
         self.n_out = n_out
         self.n_layers = n_layers
@@ -323,9 +262,9 @@ class Mix2Funn(nn.Module):
     # ------------------------------------------------------------------ T
 
     def update_temperature_from_epoch(self, epoch: int) -> float:
-        """Annealing linear de T_init -> T_final ao longo de n_anneal_epochs.
+        """Linear annealing of T from T_init to T_final over n_anneal_epochs.
 
-        Aplica T em todas as camadas. Retorna o T atual.
+        Applies the new T to every layer and returns it.
         """
         if not self.use_softmax or self.n_anneal_epochs is None:
             return self.T_init
@@ -338,21 +277,15 @@ class Mix2Funn(nn.Module):
     # ----------------------------------------------------------- Pruning
 
     def prune_alpha(self, ratio: float) -> int:
-        """Pruning de magnitude nos pesos `alpha` (logits do softmax) ou em `w`.
+        """Magnitude pruning on the combination weights (alpha or w).
 
-        Zera os `ratio * total` parametros com menor magnitude. Aplica-se camada
-        a camada. Retorna o numero de pesos zerados.
-
-        Implementacao com MASCARA PERSISTENTE: registra um buffer `_prune_mask` por
-        camada e re-aplica a mascara via hook em `register_post_accumulate_grad_hook`
-        do parametro, garantindo que gradientes nos pesos zerados permaneçam zerados
-        (eq. III.E: "mask effectively nullifies the parameters").
-
-        Apos chamar este metodo, qualquer optimizer.step() respeita o pruning porque
-        os gradientes dos pesos zerados sao zerados antes da atualizacao.
+        Zeros the `ratio * total` smallest-magnitude weights layer by layer
+        and registers a persistent mask + gradient hook so subsequent
+        optimizer steps keep the pruned weights at zero. Returns the total
+        number of zeroed weights.
         """
         if not (0.0 <= ratio <= 1.0):
-            raise ValueError("ratio deve estar em [0, 1]")
+            raise ValueError("ratio must be in [0, 1]")
         n_zeroed = 0
         for layer in self.layers:
             target = layer.alpha if layer.use_softmax else layer.w
@@ -368,9 +301,7 @@ class Mix2Funn(nn.Module):
                 target.mul_(mask)
                 n_zeroed += int((mask == 0).sum().item())
 
-            # Registra mascara como buffer persistente.
             layer.register_buffer("_prune_mask", mask, persistent=True)
-            # Hook no parametro para zerar gradientes nos pesos pruned.
             def _make_hook(m):
                 def hook(p):
                     if p.grad is not None:
@@ -381,7 +312,7 @@ class Mix2Funn(nn.Module):
 
 
 # =========================================================================
-# Utilitario — contagem de parametros (sanity test)
+# Utility
 # =========================================================================
 
 def n_params(model: nn.Module) -> int:
@@ -389,7 +320,7 @@ def n_params(model: nn.Module) -> int:
 
 
 # =========================================================================
-# Quick self-test (rodar `python mixfunn.py`)
+# Quick self-test
 # =========================================================================
 
 if __name__ == "__main__":
@@ -397,34 +328,29 @@ if __name__ == "__main__":
     print("Mix2Funn — quick self-test")
     print("-" * 60)
 
-    # Forward para osc (n_in=1, n_out=1, n_layers=1, paper-puro).
     net = Mix2Funn(n_in=1, n_out=1, n_layers=1)
-    t = torch.linspace(0.0, math.pi, 5).unsqueeze(-1)  # [5, 1]
+    t = torch.linspace(0.0, math.pi, 5).unsqueeze(-1)
     out = net(t)
     print(f"Mix2Funn(1,1,1)  in={tuple(t.shape)} out={tuple(out.shape)}  "
           f"params={n_params(net)}")
 
-    # Forward para Burgers (n_in=2, n_out=1, n_layers=1).
     net2 = Mix2Funn(n_in=2, n_out=1, n_layers=1)
     xy = torch.randn(4, 2)
     out2 = net2(xy)
     print(f"Mix2Funn(2,1,1)  in={tuple(xy.shape)} out={tuple(out2.shape)}  "
           f"params={n_params(net2)}")
 
-    # Forward para deep (n_in=1, 3 layers, hidden=4).
     net3 = Mix2Funn(n_in=1, n_out=1, n_layers=3, n_hidden=4)
     out3 = net3(t)
     print(f"Mix2Funn(1,1,3,h=4)  out={tuple(out3.shape)}  "
           f"params={n_params(net3)}")
 
-    # Annealing.
     net4 = Mix2Funn(n_in=1, n_out=1, n_layers=1, n_anneal_epochs=100)
     T_start = net4.update_temperature_from_epoch(0)
     T_mid = net4.update_temperature_from_epoch(50)
     T_end = net4.update_temperature_from_epoch(100)
     print(f"Annealing  T(0)={T_start:.2f}  T(50)={T_mid:.2f}  T(100)={T_end:.2f}")
 
-    # Pruning.
     n_z = net.prune_alpha(0.5)
     print(f"Pruning 50%  zeroed={n_z}/{net.layers[0].alpha.numel()}")
 

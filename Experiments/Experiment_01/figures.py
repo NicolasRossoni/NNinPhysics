@@ -1,4 +1,4 @@
-"""Figuras Kovasznay v14: campos extrap (Fig 4) + loss decomp (Fig 5)."""
+"""Generate the interp/extrap fields figure and the loss-decomposition figure."""
 import json
 import math
 from pathlib import Path

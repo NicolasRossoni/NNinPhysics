@@ -1,36 +1,26 @@
-# Experiment 03 — Kovasznay flow: MixFunn pruning
+# Experimento 3 — Pruning de MixFunn em Kovasznay
 
-Produces **Table 4** of `monograph.pdf`.
+> Produz a **Tabela 4** de `monograph.pdf`.
 
-## Physical problem
+## Problema
 
-Same Kovasznay setup as Experiment 01. The goal here is to evaluate **magnitude-based pruning** of the MixFunn softmax weights $\alpha_k$: after a baseline training, weights with magnitude below a percentile threshold are zeroed and the network is fine-tuned, measuring how much of the expressivity each ratio sacrifices.
+Mesma EDP do [Experimento 1](../Experiment_01/README.md). Aplica-se *pruning* por magnitude aos pesos $\alpha_k$ da softmax, em duas variantes da rede e em cinco razões cada:
 
-## Configurations trained
+- **MixFunn $3\times1$** (35 pesos): razões $r \in \{0;\,0{,}30;\,0{,}50;\,0{,}70;\,0{,}90\}$.
+- **MixFunn-sof $1\times1$** (105 pesos): mesmas cinco razões.
 
-Two MixFunn variants, each at five pruning ratios:
+## Arquivos
 
-- **MixFunn 3×1** (35 trainable weights): ratios $r \in \{0, 0.30, 0.50, 0.70, 0.90\}$.
-- **MixFunn-sof 1×1** (105 trainable weights): same five ratios.
+- `run.py` — treina os baselines e aplica *pruning* em cada razão.
+- `mixfunn.py` — camada Mix2Funn; inclui o `prune_alpha` com máscara persistente.
+- `analyze_mix_params.py` — inspeção post-hoc do `state_dict` para identificar as funções atômicas dominantes por neurônio.
 
-The sof variant has the second-order cross-product term enabled, which is what allows a single-layer network to represent the $1 - e^{\lambda x} \cos(2\pi y)$ product structure of the Kovasznay solution (Equation 11 in the monograph).
-
-## Reproduce
+## Reprodução
 
 ```bash
-modal run run_v13.py                               # trains baseline + 5 pruning ratios
+modal run run.py
 modal volume get tcc /final/kov_v13 ./results
-python analyze_mix_params.py                       # post-hoc inspection of state_dict
+python analyze_mix_params.py
 ```
 
-Total runtime ≈ 25 min wall on T4. Cost ≈ $0.30 of Modal credit.
-
-## Files
-
-- `run_v13.py` — Modal entrypoint, dispatches one container per (variant, ratio) pair.
-- `mixfunn.py` — MixFunn implementation; includes the `prune_alpha` routine that masks the lowest-magnitude weights and re-tunes.
-- `analyze_mix_params.py` — post-hoc analysis: identifies dominant atomic basis functions per neuron, formats the surviving symbolic combination.
-
-## Result summary
-
-About 30% of the parameters are essentially redundant in both variants: loss stays in the same order of magnitude up to $r = 0.30$. From $r = 0.50$ onward the loss degrades monotonically, but never enough that the surviving weights form a single dominant analytical expression in this experimental budget — closing that gap would require more aggressive annealing or a smaller atomic basis, both of which risk introducing lookahead bias.
+Tempo: ~25 min de wall-time em T4. Custo: ~$0{,}30.

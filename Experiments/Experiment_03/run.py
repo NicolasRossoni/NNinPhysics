@@ -1,11 +1,7 @@
-"""Modal v13 Kovasznay com BC hard CORRETA (Coons transfinite).
+"""Train and prune Mix2Funn on the Kovasznay flow.
 
-Mudancas vs run_v12.py:
-  - bc_mode: "leak" (kovasznay no interior, igual v12; mantido para Tabela 1 consistente com Tabela 2)
-             "coons" (interpolacao transfinita correta; usado em regularizacao e pruning novo)
-  - itens: salva state_dict do net pos-treino no volume para analise pos-hoc
-  - extrap_grid_x: inferencia em x in [-0.5, 2.5] (estendido para Figura 1)
-  - iters padrao = 15000 (compromisso tempo/qualidade vs Tabela 2 v3 que usou 45k)
+Runs the baseline, then applies magnitude pruning at five ratios for each
+of two Mix variants (3x1 standard and 1x1 with second-order cross-products).
 """
 
 import json

@@ -1,48 +1,37 @@
-# Experiment 06 — Nonlinear Schrödinger equation
+# Experimento 6 — Equação de Schrödinger não-linear
 
-Produces **Figure 9** of `monograph.pdf`.
+> Produz a **Figura 9** de `monograph.pdf`.
 
-## Physical problem
+## Problema
 
-One-dimensional cubic nonlinear Schrödinger equation,
+$$\left\{\begin{array}{l}
+i\,\psi_t + \tfrac{1}{2}\,\psi_{xx} + |\psi|^2\,\psi = 0, \\
+\psi(x, 0) = 2\,\mathrm{sech}(x), \\
+\psi(\pm 5, t) = 0,
+\end{array}\right. \qquad t \in [0,\, \pi/2].$$
 
-$$
-i\,\psi_t + \tfrac{1}{2}\,\psi_{xx} + |\psi|^2\,\psi = 0, \qquad
-\psi(x, 0) = 2\,\mathrm{sech}(x), \qquad \psi(\pm 5, t) = 0,
-$$
+Rede de duas saídas $(\Re\psi,\, \Im\psi)$; treino não-supervisionado. A referência numérica é obtida por integração split-step Fourier.
 
-on $t \in [0, \pi/2]$. The $2\,\mathrm{sech}(x)$ initial condition seeds a bright soliton that propagates while preserving its envelope shape.
+## Arquivos
 
-## Configurations trained
+A configuração do monograph foi escolhida em uma sprint exploratória de quatro lotes sequenciais — cada lote leu o resultado do anterior antes de definir suas configurações:
 
-- **PINN 5×100**, two-output ($\Re\psi$, $\Im\psi$) with the residual evaluated on both components.
-- **MixFunn-sof 3×6**, same two-output topology.
+- `batch1.py` — varredura inicial de PINN em diferentes (profundidade, largura).
+- `batch2.py` — extensão de iterações para as PINNs que ainda decresciam.
+- `batch3.py` — primeiras configurações de MixFunn-sof e uma PINN com iterações equivalentes para comparação.
+- `batch4.py` — PINN no número de iterações faltante para o pareamento direto com a melhor MixFunn-sof.
+- `mixfunn.py` — camada Mix2Funn.
 
-Both networks train unsupervised on the residual + IC + BC penalties. The reference solution shown in Figure 9 is computed offline by split-step Fourier integration.
-
-The Schrödinger sprint also explored alternative MixFunn bases (e.g., $\{ \sin, \cos \}$ with $K = 2$) and a Raissi-style Adam + L-BFGS pipeline — none beat the $3 \times 6$ MixFunn-sof baseline reported here.
-
-## Reproduce
+## Reprodução
 
 ```bash
-modal run batch1.py                                 # PINN 5x100
-modal run batch2.py                                 # MixFunn-sof 3x6 baseline
-modal run batch3.py                                 # variant sweep (alternative bases)
-modal run batch4.py                                 # Adam + L-BFGS pipeline
+modal run batch1.py
+modal run batch2.py
+modal run batch3.py
+modal run batch4.py
 modal volume get tcc /final/schrod_v22 ./results
 ```
 
-Total runtime ≈ 30 min wall on T4. Cost ≈ $0.30 of Modal credit.
+Tempo: ~30 min de wall-time em T4 (lotes em sequência; cada lote despacha jobs em paralelo). Custo: ~$0{,}30.
 
-## Files
-
-- `batch1.py` … `batch4.py` — Modal entrypoints; each launches a batch of configurations on the same Modal app.
-- `mixfunn.py` — MixFunn implementation.
-
-## Observed behaviour
-
-PINN reproduces the soliton faithfully across the full time horizon. MixFunn-sof underestimates the central peak amplitude but recovers the exponential decay at the boundaries well — see Figure 9 caption and §3.3 of the monograph.
-
-## Reference
-
-Problem statement and reference numerical solution as in RAISSI et al. (2019).
+> Apenas `batch3.py` e `batch4.py` são necessários para reproduzir as duas configurações finais que aparecem na Figura 9; os dois primeiros lotes fazem parte do diário da exploração.
