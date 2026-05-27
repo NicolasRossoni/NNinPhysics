@@ -11,18 +11,22 @@ u(\pm 1, t) = 0,
 \end{array}\right.
 \qquad \nu = 0{,}01/\pi, \quad x \in [-1, 1], \quad t \in [0, 1].$$
 
-Treino estritamente não-supervisionado (resíduo da EDP mais condições inicial e de contorno; sem termo de regressão). A referência numérica usada na figura é gerada por Runge–Kutta de quarta ordem em uma grade de diferenças finitas.
+Treino estritamente não-supervisionado (resíduo da EDP mais condições inicial e de contorno; sem termo de regressão). A solução de referência é gerada por pseudo-espectral Fourier ($N = 256$) com integração temporal Runge–Kutta de quarta ordem ($\Delta t = 10^{-4}$) e depois interpolada para a grade de avaliação $200 \times 100$.
 
 ## Arquivos
 
-- `run.py` — despacha PINN $6\times64$ e MixFunn-sof $3\times6$ no Modal.
-- `mixfunn.py` — camada Mix2Funn.
+- `1_preprocess.py` — gera a referência espectral + RK4 e a amostragem Latin-Hypercube dos pontos de colocação. Salva tudo num `.npz` único em `tcc:/preprocess/exp_05/`.
+- `2_train.py` — treina PINN $6\times64$ e MixFunn-sof $3\times6$ em paralelo no Modal. Checkpoints em `tcc:/checkpoints/exp_05/`.
+- `3_analyze.py` — baixa os checkpoints, calcula $L^2$ final e gera `burgers_v25.png` (três mapas de calor: referência | PINN | MixFunn$_{\rm sof}$).
+- `mixfunn.py` — camada Mix2Funn (não editar).
 
 ## Reprodução
 
 ```bash
-modal run run.py
-modal volume get tcc /final/burgers_v22 ./results
+modal run 1_preprocess.py
+modal run 2_train.py
+modal volume get tcc /checkpoints/exp_05 ./tmp_checkpoints
+python 3_analyze.py
 ```
 
-Tempo: ~15 min de wall-time em T4. Custo: ~$0{,}15.
+Tempo: ~20 min de wall-time em T4 (duas redes em paralelo). Custo: ~$0{,}25.

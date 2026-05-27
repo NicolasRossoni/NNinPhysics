@@ -4,36 +4,47 @@
 
 ## Problema
 
-Navier–Stokes incompressível 3D estacionário em uma geometria anatômica real (caso `AN4` do *dataset* ANEUMO, fator de vazão $m = 0{,}002$):
+Navier–Stokes incompressível 3D estacionário em geometria anatômica real
+(caso `AN4` do *dataset* ANEUMO, fator de vazão $m = 0{,}002$):
 
 $$\left\{\begin{array}{l}
-(\mathbf{u} \cdot \nabla)\mathbf{u} + \nabla p / \rho - \nu\,\nabla^2 \mathbf{u} = 0, \\
+\rho\,(\mathbf{u} \cdot \nabla)\mathbf{u} + \nabla p - \mu\,\nabla^{2}\mathbf{u} = 0, \\
 \nabla \cdot \mathbf{u} = 0, \\
 \mathbf{u}|_{\text{parede}} = 0, \quad
 \mathbf{u}|_{\text{entrada}} = \mathbf{u}_{\text{fis}}, \quad
 p|_{\text{saída}} = 0.
 \end{array}\right.$$
 
-Nuvem de pontos com aproximadamente $129\,000$ amostras de um paciente real. Os campos de referência $(\mathbf{u}, p)$ vêm de uma simulação CFD comercial fornecida no próprio *dataset*.
+Nuvem de pontos com $\approx 129\,000$ amostras de um paciente real
+($\rho = 1060$ kg/m³, $\mu = 3{,}5\times 10^{-3}$ Pa·s, $\mathrm{Re} \sim 230$).
+Os campos de referência $(\mathbf{u}, p)$ vêm de simulação CFD comercial
+disponibilizada no próprio *dataset*.
 
 ## Arquivos
 
-- `parse_aneumo.py` — baixa o *dataset* ANEUMO, extrai o caso `AN4` e sobe a nuvem de pontos para o volume Modal.
-- `train_networks.py` — treina, em paralelo, as nove configurações da Tabela 5 (PINN e MixFunn em três regimes de supervisão: 0%, 25%, 50% e 100%).
-- `run_aneur_pinn_unsup.py` — variante stand-alone do treino não-supervisionado da PINN $8\times128$.
-- `plot_predictions.py` — gera a Figura 6 (painel 3D) e a Figura 7 (corte no plano $z \approx 39{,}75$ mm).
-- `plot_aneumo.py` — visualizações do *dataset* bruto.
-- `validate_aneumo.py` — verificação numérica das predições contra a referência.
+- `1_preprocess.py` — envia a nuvem de pontos parseada (`case_AN4_m002.npz`) para
+  o volume Modal em `tcc:/preprocess/exp_04/`.
+- `2_train.py` — treina, em paralelo no Modal (T4), as **nove** configurações da
+  Tabela 5 (variando PINN/MixFunn, profundidade, largura, *softmax* e taxa de
+  supervisão entre 0%, 25%, 50% e 100%). Salva em `tcc:/checkpoints/exp_04/`.
+- `3_analyze.py` — local; baixa os *checkpoints*, imprime a Tabela 5 e gera
+  `aneur_panel_3d.png` (Figura 6) e `aneur_panel_plane.png` (Figura 7).
 
 ## Reprodução
 
+O script `1_preprocess.py` espera o arquivo `case_AN4_m002.npz` em `/tmp/`;
+ele é gerado a partir do *dataset* bruto ANEUMO (caso 4, m=0.002) — ver
+<https://arxiv.org/abs/2505.14717>.
+
 ```bash
-modal run parse_aneumo.py
-modal run train_networks.py
-modal volume get tcc /final/aneurisma ./results
-python plot_predictions.py
+modal run 1_preprocess.py
+modal run 2_train.py
+modal volume get tcc /preprocess/exp_04/case_AN4_m002.npz ./tmp_checkpoints/
+modal volume get tcc /checkpoints/exp_04 ./tmp_checkpoints
+python 3_analyze.py
 ```
 
-Tempo: ~60–90 min de wall-time em T4 (containers paralelos). Custo: ~$1{,}00.
+Tempo: $\approx 60$–$90$ min de *wall-time* em T4 (até 9 contêineres em paralelo).
+Custo: $\approx$ \$1.
 
-ANEUMO: <https://arxiv.org/abs/2505.14717>
+Saída: `aneur_panel_3d.png` e `aneur_panel_plane.png` no diretório do experimento.

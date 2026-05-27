@@ -11,6 +11,7 @@ venv/
 # Experiment outputs (large artifacts go to Modal volume, not git)
 results/
 output/
+tmp_checkpoints/
 *.pt
 *.npz
 *.log

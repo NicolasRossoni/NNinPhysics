@@ -13,22 +13,30 @@ u_x + v_y = 0,
 \end{array}\right.
 \qquad \Omega = [-0{,}5;\,1] \times [-0{,}5;\,1{,}5], \quad \mathrm{Re} = 40.$$
 
-Condição de contorno imposta exatamente via interpolação transfinita de Coons.
+Solução analítica:
+
+$$u(x,y) = 1 - e^{\lambda x}\cos(2\pi y), \quad
+v(x,y) = \tfrac{\lambda}{2\pi}\,e^{\lambda x}\sin(2\pi y), \quad
+p(x,y) = \tfrac{1}{2}(1 - e^{2\lambda x}),$$
+
+com $\lambda = \mathrm{Re}/2 - \sqrt{(\mathrm{Re}/2)^2 + 4\pi^2} \approx -0{,}964$. Condição de contorno imposta exatamente via interpolação transfinita de Coons.
 
 ## Arquivos
 
-- `run.py` — despacha em paralelo no Modal todas as configurações da Tabela 1 e da Tabela 2 (sup / não-sup × 3 seeds, varredura de profundidade e largura para PINN e MixFunn, além da MixFunn-sof $1\times1$ usada na análise da Eq. 11 do monograph).
+- `1_preprocess.py` — monta os pontos de colocação (Hipercubo Latino) e as grades de validação / avaliação / extrapolação; faz upload em `tcc:/preprocess/exp_01/`.
+- `2_train.py` — treina em paralelo no Modal T4 as 31 configurações (Tabela 1: PINN $4\times32$ e MixFunn $3\times1$, sup e nsup, 3 seeds; Tabela 2: varredura $N\times n$ para PINN e MixFunn; MixFunn $1\times1$ com `sof=True`). Salva métricas + checkpoints em `tcc:/checkpoints/exp_01/`.
+- `3_analyze.py` — lê os checkpoints baixados em `./tmp_checkpoints/`, imprime Tabela 1 e Tabela 2 no console e gera `kov_v12_fields_extrap.png` e `kov_v12_loss_decomp.png`.
 - `mixfunn.py` — camada Mix2Funn (empilhável, com `second_order_function` opcional e annealing da temperatura da softmax).
-- `aggregate.py` — consolida as métricas salvas no volume Modal nas tabelas do monograph.
-- `figures.py` — gera a Figura 4 (campos interp/extrap) e a Figura 5 (decomposição da loss em Momento e Massa).
 
 ## Reprodução
 
 ```bash
-modal run run.py
-modal volume get tcc /final/kov_v14 ./results
-python aggregate.py
-python figures.py
+modal run 1_preprocess.py
+modal run 2_train.py
+modal volume get tcc /checkpoints/exp_01 ./tmp_checkpoints
+python 3_analyze.py
 ```
 
-Tempo: ~30–45 min de wall-time em T4 (containers paralelos). Custo: ~$0{,}50.
+## Tempo e custo
+
+31 jobs em paralelo no Modal T4. `ITER_T1 = 15000` (Tabela 1) e `ITER_T2 = 10000` (sweep). Wall-clock ~ 15–25 min por job; custo total ~ US\$ 3–5.
