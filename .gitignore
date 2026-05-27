@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Modal local cache
+.modal/
+
+# Experiment outputs (large artifacts go to Modal volume, not git)
+results/
+output/
+*.pt
+*.npz
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
