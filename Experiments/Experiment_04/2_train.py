@@ -53,123 +53,17 @@ CONFIGS = [
 
 ### ============= ### ###  Modal App  ### ###  ============= ###
 
+PARENT = Path(__file__).resolve().parent
 app = modal.App(
     "nnphysics-exp04",
     image=(modal.Image.debian_slim(python_version="3.11")
-           .pip_install("torch==2.5.1", "numpy")),
+           .pip_install("torch==2.5.1", "numpy")
+           .add_local_file(str(PARENT / "mixfunn.py"), "/root/mixfunn.py", copy=True)),
 )
 volume = modal.Volume.from_name("tcc", create_if_missing=True)
 VOLUME_PATH = "/data"
 DATA_NPZ = "/data/preprocess/exp_04/case_AN4_m002.npz"
 CHECKPOINT_DIR = "/data/checkpoints/exp_04"
-
-
-### ============= ### ###  Camada Mix2Funn (inline)  ### ###  ============= ###
-
-# Definicao inline (auto-contida) da camada Mix2Funn usada na MixFunn.
-# Variante reduzida da MixFunn (mistura softmax de funcoes elementares de
-# primeira ordem mais um produto de segunda ordem opcional). Auto-contida para
-# que 2_train.py rode sem nenhuma dependencia externa alem de torch/numpy.
-
-MIX2FUNN_SRC = r'''
-import math
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
-
-# Conjunto de funcoes elementares de primeira ordem (entrada escalar -> saida escalar).
-FIRST_ORDER = [
-    lambda z: z,
-    lambda z: torch.sin(z),
-    lambda z: torch.cos(z),
-    lambda z: torch.tanh(z),
-    lambda z: torch.exp(-z * z),
-]
-N_F1 = len(FIRST_ORDER)
-
-
-class Mix2FunnLayer(nn.Module):
-    def __init__(self, n_in, n_hidden, use_softmax=True,
-                 second_order_function=False, init_alpha_std=0.1):
-        super().__init__()
-        self.n_in = n_in; self.n_hidden = n_hidden
-        self.use_softmax = use_softmax
-        self.second_order_function = second_order_function
-
-        # Combinacao linear de entradas -> argumentos das funcoes de 1a ordem
-        self.W1 = nn.Linear(n_in, n_hidden * N_F1, bias=True)
-
-        # Pesos (alphas) de mistura das funcoes em cada neuronio
-        self.alpha = nn.Parameter(torch.randn(n_hidden, N_F1) * init_alpha_std)
-
-        if second_order_function:
-            # Camada de segunda ordem: produto entre duas combinacoes lineares
-            self.W2a = nn.Linear(n_in, n_hidden, bias=True)
-            self.W2b = nn.Linear(n_in, n_hidden, bias=True)
-            # Mistura entre 1a e 2a ordem
-            self.alpha2 = nn.Parameter(torch.randn(n_hidden, 2) * init_alpha_std)
-
-        # Temperatura da softmax (atualizada via annealing)
-        self.register_buffer("T", torch.tensor(1.0))
-
-    def set_temperature(self, T):
-        self.T.fill_(float(T))
-
-    def _mix_weights(self, alpha):
-        if self.use_softmax:
-            return F.softmax(alpha / self.T.clamp(min=1e-6), dim=-1)
-        return alpha
-
-    def forward(self, x):
-        # x: (B, n_in)
-        z = self.W1(x)  # (B, n_hidden * N_F1)
-        z = z.view(-1, self.n_hidden, N_F1)
-        # Aplica cada funcao elementar ao canal correspondente
-        feats = torch.stack([f(z[..., i]) for i, f in enumerate(FIRST_ORDER)], dim=-1)
-        # (B, n_hidden, N_F1)
-        w = self._mix_weights(self.alpha)            # (n_hidden, N_F1)
-        out1 = (feats * w.unsqueeze(0)).sum(dim=-1)  # (B, n_hidden)
-
-        if self.second_order_function:
-            out2 = self.W2a(x) * self.W2b(x)         # (B, n_hidden)
-            w2 = self._mix_weights(self.alpha2)      # (n_hidden, 2)
-            out = w2[:, 0].unsqueeze(0) * out1 + w2[:, 1].unsqueeze(0) * out2
-        else:
-            out = out1
-        return out
-
-
-class Mix2Funn(nn.Module):
-    def __init__(self, n_in, n_out, n_layers, n_hidden,
-                 use_softmax=True, second_order_function=False,
-                 T_init=5.0, T_final=0.05, n_anneal_epochs=15000,
-                 init_alpha_std=0.1):
-        super().__init__()
-        self.T_init = T_init; self.T_final = T_final
-        self.n_anneal = max(1, int(n_anneal_epochs))
-        self.layers = nn.ModuleList()
-        last = n_in
-        for _ in range(n_layers):
-            self.layers.append(Mix2FunnLayer(
-                last, n_hidden, use_softmax=use_softmax,
-                second_order_function=second_order_function,
-                init_alpha_std=init_alpha_std))
-            last = n_hidden
-        self.head = nn.Linear(last, n_out)
-
-    def update_temperature_from_epoch(self, ep):
-        # Annealing exponencial de T_init para T_final
-        frac = min(1.0, ep / self.n_anneal)
-        T = self.T_init * (self.T_final / self.T_init) ** frac
-        for layer in self.layers:
-            layer.set_temperature(T)
-
-    def forward(self, x):
-        for layer in self.layers:
-            x = layer(x)
-        return self.head(x)
-'''
 
 
 ### ============= ### ###  Funcao remota de treino  ### ###  ============= ###
@@ -178,6 +72,8 @@ class Mix2Funn(nn.Module):
               max_containers=12)
 def train_one(label: str, kind: str, n_layers: int, width: int, sof: bool,
               sup_ratio: float, pde_weight: float, iterations: int) -> dict:
+    import sys
+    sys.path.insert(0, "/root")
     import numpy as np
     import torch as tc
     from torch import nn
@@ -271,10 +167,9 @@ def train_one(label: str, kind: str, n_layers: int, width: int, sof: bool,
                 nn.init.zeros_(m.bias)
         lr = LR_PINN
     else:
-        # Compila Mix2Funn inline
-        ns = {}
-        exec(MIX2FUNN_SRC, ns)
-        Mix2Funn = ns["Mix2Funn"]
+        # MixFunn canonica (Mix2Funn de mixfunn.py): 7 funcoes de base,
+        # pre-mistura quadratica das entradas e produtos cruzados de 2a ordem.
+        from mixfunn import Mix2Funn
         rede = Mix2Funn(
             n_in=3, n_out=4, n_layers=n_layers, n_hidden=width,
             use_softmax=True, T_init=T_INIT_MIX, T_final=T_FINAL_MIX,
@@ -427,10 +322,11 @@ def train_one(label: str, kind: str, n_layers: int, width: int, sof: bool,
 
 @app.local_entrypoint()
 def main():
-    print(f"[main] disparando {len(CONFIGS)} jobs ANEUMO em paralelo...", flush=True)
+    run_cfgs = list(CONFIGS)
+    print(f"[main] disparando {len(run_cfgs)} jobs ANEUMO em paralelo...", flush=True)
     t0 = time.perf_counter()
     args = [(lbl, kind, nl, w, sof, sup, pde, it)
-            for (lbl, kind, nl, w, sof, sup, pde, it) in CONFIGS]
+            for (lbl, kind, nl, w, sof, sup, pde, it) in run_cfgs]
     results = list(train_one.starmap(args))
     wall = time.perf_counter() - t0
     print(f"[main] {len(results)} runs em {wall:.1f}s", flush=True)

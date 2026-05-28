@@ -110,19 +110,8 @@ def train_one(
                 nn.init.xavier_normal_(m.weight)
                 nn.init.zeros_(m.bias)
     else:
-        # MixFunn com base atomica reduzida a 4 funcoes: sin, cos, identidade, quadrado.
-        # A reducao e feita por monkey-patch das listas globais BASE_FUNCTIONS / Q
-        # antes de instanciar a rede. O modulo mixfunn.py permanece intacto.
-        import mixfunn as _mf
-
-        class Square(nn.Module):
-            def forward(self, x: tc.Tensor) -> tc.Tensor:
-                return x * x
-
-        _mf.BASE_FUNCTIONS = [_mf.Sin(), _mf.Cos(), _mf.Id(), Square()]
-        _mf.BASE_FUNCTION_NAMES = ["sin", "cos", "id", "square"]
-        _mf.Q = 4
-
+        # MixFunn com a base atomica canonica completa (7 funcoes:
+        # sin, cos, expN, expP, sqrt, log, id) do modulo mixfunn.py, sem alteracoes.
         from mixfunn import Mix2Funn
         net = Mix2Funn(
             n_in=2, n_out=2,
@@ -283,6 +272,41 @@ def train_one(
             if tot < best["l2_tot"]:
                 best["l2x"] = l2x; best["l2z"] = l2z; best["l2_tot"] = tot
                 best["state"] = {k_: v.detach().clone() for k_, v in net.state_dict().items()}
+                # Persiste o melhor estado imediatamente (campos + .pt) e faz
+                # commit no volume, para que uma eventual interrupcao do cliente
+                # local nao descarte o melhor resultado ja encontrado.
+                try:
+                    net.eval()
+                    with tc.no_grad():
+                        xz_b = tc.stack([Xg_t.reshape(-1), Zg_t.reshape(-1)], dim=1)
+                        Hx_b, Hz_b = forward_hard(xz_b)
+                        Hx_b = Hx_b.reshape(NGRID, NGRID).cpu().numpy()
+                        Hz_b = Hz_b.reshape(NGRID, NGRID).cpu().numpy()
+                    net.train()
+                    out_dir_b = Path(CHECKPOINT_DIR)
+                    out_dir_b.mkdir(parents=True, exist_ok=True)
+                    np.savez(
+                        out_dir_b / f"{label}.npz",
+                        x=Xg, z=Zg,
+                        Hx_ref=Hx_ref_t.cpu().numpy(), Hz_ref=Hz_ref_t.cpu().numpy(),
+                        Hx_pred=Hx_b, Hz_pred=Hz_b,
+                    )
+                    (out_dir_b / f"{label}.json").write_text(json.dumps({
+                        "label": label, "kind": kind, "n_layers": n_layers,
+                        "width": width, "mode": "nsup_lift", "seed": seed, "lr": lr,
+                        "adam_iters": adam_iters, "lbfgs_outer": lbfgs_outer,
+                        "lbfgs_inner": lbfgs_inner, "sof": sof, "n_params": n_params,
+                        "l2_hx": best["l2x"], "l2_hz": best["l2z"],
+                        "l2_tot": best["l2_tot"], "wall_clock": -1.0,
+                        "wall_adam": wall_adam, "wall_lbfgs": -1.0,
+                        "epochs_log": epochs_log, "loss_curl": loss_curl_hist,
+                        "loss_div": loss_div_hist, "loss_total": loss_total_hist,
+                        "l2_curve": l2_curve,
+                    }))
+                    tc.save(best["state"], out_dir_b / f"{label}.pt")
+                    volume.commit()
+                except Exception as e:
+                    print(f"[{label}] WARN commit incremental: {e}", flush=True)
             print(f"[{label}] lbfgs k={k} L={state['L'].item():.3e} "
                   f"L_curl={state['Lc'].item():.3e} L_div={state['Ld'].item():.3e} "
                   f"L2x={l2x:.3e} L2z={l2z:.3e} (best L2_tot={best['l2_tot']:.3e})",
@@ -357,11 +381,11 @@ def train_one(
 def main():
     # Duas configuracoes nao-supervisionadas (lift hard-BC), unificadas Adam -> L-BFGS:
     #   - PINN 8 x 96
-    #   - MixFunn-sof 1 x 2 (sof=True, base atomica reduzida a 4 funcoes)
+    #   - MixFunn-sof 3 x 3 (sof=True, base atomica canonica completa de 7 funcoes)
     cfg = [
         ("pinn_8x96_nsup", "pinn", 8, 96, SEED, LR,
          ADAM_ITERS, LBFGS_OUTER, LBFGS_INNER, False),
-        ("mix_1x2_sof_nsup", "mix", 1, 2, SEED, LR,
+        ("mix_3x3_sof_nsup", "mix", 3, 3, SEED, LR,
          ADAM_ITERS, LBFGS_OUTER, LBFGS_INNER, True),
     ]
     print(f"[main] launching {len(cfg)} jobs Modal T4 (nnphysics-exp07)...",

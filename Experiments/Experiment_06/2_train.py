@@ -273,7 +273,7 @@ def train_one(
 def main():
     # (label, kind, n_layers, width, lr, iters)
     configs = [
-        ("pinn_8x100_nsup", "pinn", 8, 100, LR_PINN, ITERS_PINN),
+        ("pinn_5x100_nsup", "pinn", 5, 100, LR_PINN, ITERS_PINN),
         ("mix_3x6_sof_nsup", "mix",  3,   6, LR_MIX,  ITERS_MIX),
     ]
 

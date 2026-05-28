@@ -13,7 +13,7 @@ HERE = Path(__file__).resolve().parent
 CHECKPOINTS_LOCAL = HERE / "tmp_checkpoints" / "by_label"
 FIG_OUT = HERE / "schrod_v25.png"
 
-LABEL_PINN = "pinn_8x100_nsup"
+LABEL_PINN = "pinn_5x100_nsup"
 LABEL_MIX = "mix_3x6_sof_nsup"
 
 T_CUTS = [0.25, 0.5, 0.65, 0.8]
@@ -79,7 +79,7 @@ def gerar_figura(pinn, mix):
     extent = [t.min(), t.max(), x.min(), x.max()]
     titulos = [
         "Solução de referência (SSF)",
-        f"PINN $8\\times 100$ ($L^2 = {fmt_sci(l2_pinn)}$)",
+        f"PINN $5\\times 100$ ($L^2 = {fmt_sci(l2_pinn)}$)",
         f"MixFunn$_{{\\rm sof}}$ $3\\times 6$ ($L^2 = {fmt_sci(l2_mix)}$)",
     ]
     dados = [abs_ref, abs_pinn, abs_mix]
@@ -157,7 +157,7 @@ def main():
     print("=" * 70)
     print(f"{'Configuracao':<22} | {'L2|psi|':<10} | {'n_params':<8} | wall (s)")
     print("-" * 70)
-    for nome, r in [("PINN 8x100",  pinn), ("MixFunn-sof 3x6", mix)]:
+    for nome, r in [("PINN 5x100",  pinn), ("MixFunn-sof 3x6", mix)]:
         m = r["meta"]
         print(f"{nome:<22} | {m['l2_val']:.3e} | {m['n_params']:<8} | "
               f"{m['wall_clock']:.0f}")

@@ -12,7 +12,7 @@ PARENT = Path(__file__).resolve().parent
 DEFAULT_CHK_DIR = PARENT / "tmp_checkpoints" / "exp_07"
 
 LABEL_PINN = "pinn_8x96_nsup"
-LABEL_MIX = "mix_1x2_sof_nsup"
+LABEL_MIX = "mix_3x3_sof_nsup"
 
 OUT_FIG = PARENT / "baldan_v25.png"
 
@@ -43,7 +43,7 @@ def make_figure(data_pinn: dict, data_mix: dict, out_path: Path,
     cols = [
         ("Solução de referência (FD)", Hx_ref, Hz_ref),
         (f"PINN 8x96 lift ($L^2_{{H_x}} = {l2_pinn_hx:.2e}$)", Hx_pinn, Hz_pinn),
-        (f"MixFunn$_{{\\rm sof}}$ 1x2 ($L^2_{{H_x}} = {l2_mix_hx:.2e}$)",
+        (f"MixFunn$_{{\\rm sof}}$ 3x3 ($L^2_{{H_x}} = {l2_mix_hx:.2e}$)",
          Hx_mix, Hz_mix),
     ]
 
@@ -127,7 +127,7 @@ def main():
             "n_params": rec_pinn["n_params"],
             "wall_clock": rec_pinn["wall_clock"],
         },
-        "mix_1x2_sof_nsup": {
+        "mix_3x3_sof_nsup": {
             "l2_hx": l2_mix_hx, "l2_hz": l2_mix_hz,
             "n_params": rec_mix["n_params"],
             "wall_clock": rec_mix["wall_clock"],

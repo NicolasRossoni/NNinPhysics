@@ -246,10 +246,10 @@ def train_one(
 def main() -> None:
     # Duas configuracoes principais (estritamente nao-supervisionadas):
     #   - PINN 6x64 com tanh
-    #   - MixFunn-sof 3x6 (segunda ordem ligada, base completa de 7 funcoes)
+    #   - MixFunn-sof 3x3 (segunda ordem ligada, base completa de 7 funcoes)
     configs = [
         ("pinn_6x64", "pinn", 6, 64, False, ITERATIONS, LR_PINN),
-        ("mix_3x6_sof", "mix", 3, 6, True,  ITERATIONS, LR_MIX),
+        ("mix_3x3_sof", "mix", 3, 3, True,  ITERATIONS, LR_MIX),
     ]
 
     print(f"[main] lancando {len(configs)} jobs Modal T4...", flush=True)

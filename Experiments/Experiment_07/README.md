@@ -25,7 +25,7 @@ Resíduos:
 ## Arquivos
 
 - `1_preprocess.py` — gera a referência FD para o potencial escalar magnético ($\mu_r = 3$ no disco), o hipercubo latino de pontos interiores e os metadados. Salva em `tcc:/preprocess/exp_07/`.
-- `2_train.py` — treina, em paralelo no Modal, **PINN 8×96 com lift hard-BC** e **MixFunn-sof 1×2 com base atômica reduzida a quatro funções** ($\sin$, $\cos$, identidade, quadrado) e produtos cruzados de segunda ordem ativados. Cada configuração roda Adam (~10k iterações) seguido de L-BFGS (~300 iterações externas) na mesma função. Salva em `tcc:/checkpoints/exp_07/`.
+- `2_train.py` — treina, em paralelo no Modal, **PINN 8×96 com lift hard-BC** e **MixFunn-sof 3×3 com a base atômica canônica completa de sete funções** ($\sin$, $\cos$, $e^{-x}$, $e^{x}$, $\sqrt{\cdot}$, $\log$, identidade) e produtos cruzados de segunda ordem ativados. Cada configuração roda Adam (~10k iterações) seguido de L-BFGS (~300 iterações externas) na mesma função. Salva em `tcc:/checkpoints/exp_07/`.
 - `3_analyze.py` — lê os checkpoints baixados, computa o $L^2$ relativo por componente e produz `baldan_v25.png` (duas linhas, $H_x$ e $H_z$; três colunas, FD / PINN / MixFunn).
 - `mixfunn.py` — camada Mix2Funn (mesmo arquivo dos demais experimentos).
 

@@ -12,7 +12,7 @@ CHECKPOINTS = PARENT / "tmp_checkpoints"        # baixado via `modal volume get`
 OUT_PNG = PARENT / "burgers_v25.png"
 
 PINN_LABEL = "pinn_6x64"
-MIX_LABEL  = "mix_3x6_sof"
+MIX_LABEL  = "mix_3x3_sof"
 
 
 ### ============= ### ###  Utilitarios  ### ###  ============= ###
@@ -59,7 +59,7 @@ l2_pinn = float(pinn_json["l2_final"])
 l2_mix  = float(mix_json["l2_final"])
 
 print(f"[analyze] PINN  6x64   L2 = {l2_pinn:.3e}   (n_params = {pinn_json['n_params']})")
-print(f"[analyze] Mix   3x6 sof L2 = {l2_mix:.3e}   (n_params = {mix_json['n_params']})")
+print(f"[analyze] Mix   3x3 sof L2 = {l2_mix:.3e}   (n_params = {mix_json['n_params']})")
 
 ### ============= ### ###  Plot: 3 heatmaps  ### ###  ============= ###
 # Layout: referencia | PINN | MixFunn_sof  (todos com colorbar individual)
@@ -75,7 +75,7 @@ vmin, vmax = -1.0, 1.0
 titulos = [
     r"Solução de referência (espectral)",
     rf"PINN $6 \times 64$ ($L^2 = {_fmt_l2(l2_pinn)}$)",
-    rf"MixFunn$_{{\rm sof}}$ $3 \times 6$ ($L^2 = {_fmt_l2(l2_mix)}$)",
+    rf"MixFunn$_{{\rm sof}}$ $3 \times 3$ ($L^2 = {_fmt_l2(l2_mix)}$)",
 ]
 campos = [u_ref, u_pinn, u_mix]
 
