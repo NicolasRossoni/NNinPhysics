@@ -15,7 +15,9 @@ Rede de duas saídas $(\Re\psi,\, \Im\psi)$; treino não-supervisionado (resídu
 ## Arquivos
 
 - `1_preprocess.py` — calcula a solução de referência split-step Fourier no grid $200 \times 100$ e amostra os pontos de colocação via Hipercubo Latino, salva em `tcc:/preprocess/exp_06/`.
-- `2_train.py` — entrypoint Modal `nnphysics-exp06`. Despacha em paralelo as duas configurações finais (PINN $8\times 100$ não-supervisionada com $25{,}000$ iterações e MixFunn$_{\rm sof}$ $3\times 6$ não-supervisionada com $10{,}000$ iterações), Adam com `StepLR` ($\gamma=0{,}5$ a cada $25\%$ do treino). Salva checkpoints em `tcc:/checkpoints/exp_06/by_label/`.
+- `2_train.py` — entrypoint Modal `nnphysics-exp06`. Despacha em paralelo as duas configurações finais (PINN $5\times 100$ não-supervisionada e MixFunn$_{\rm sof}$ $3\times 6$ não-supervisionada), Adam com `StepLR` ($\gamma=0{,}5$ a cada $25\%$ do treino). Salva checkpoints em `tcc:/checkpoints/exp_06/by_label/`.
+
+  **Nota — único experimento com L-BFGS.** A PINN da Schrödinger não-linear é o único caso em que, depois do Adam, aplicamos um polimento com L-BFGS (line search Wolfe forte). O resíduo da Schrödinger é difícil de levar a $10^{-3}$ só com Adam; o L-BFGS faz esse acabamento. Para a MixFunn salvamos o melhor checkpoint ao longo do treino (ela converge cedo e depois oscila). Os demais experimentos usam apenas Adam.
 - `3_analyze.py` — lê os checkpoints baixados localmente, imprime a tabela de $L^2$ comparando contra a referência e gera `schrod_v25.png` (três mapas de calor de $|\psi|$ na linha superior e quatro cortes em $t$ na inferior).
 - `mixfunn.py` — camada Mix2Funn (empilhável, com `second_order_function=True` e annealing da temperatura da softmax).
 

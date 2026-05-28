@@ -2,6 +2,17 @@
 
 > Produz a **Figura 10** de `monograph.pdf`.
 
+> **Aviso de reprodutibilidade.** Este é o **único** experimento cujo resultado da
+> MixFunn na monografia (Figura 10, $L^2_{H_x} = 6{,}1\times10^{-1}$) **não é reproduzido
+> pela seed commitada aqui**. A figura do PDF foi gerada antes de refatorarmos o código
+> para esta estrutura pública, e a seed daquela execução foi perdida. Os métodos são
+> exatamente os mesmos (mesma EDP, mesmo lift de hard-BC, mesma MixFunn$_{\rm sof}$ $3\times3$
+> de base completa, mesmo Adam$\to$L-BFGS): a solução mostrada no PDF *foi* de fato aprendida
+> pela MixFunn sob essas condições — é só uma questão de reencontrar a seed/hiperparâmetros
+> favoráveis, o que está fora do escopo deste trabalho. Com a seed atual a MixFunn colapsa
+> na solução de fundo ($L^2_{H_x} \approx 1{,}2$). A PINN ($8\times96$ lift) é reprodutível
+> normalmente. Todos os outros experimentos do repositório são 100% reprodutíveis.
+
 ## Problema
 
 $$\left\{\begin{array}{l}

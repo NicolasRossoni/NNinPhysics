@@ -19,8 +19,9 @@ N_BC = 1000                                # pontos das condicoes de contorno
 LR_PINN = 1e-3                             # learning rate da PINN
 LR_MIX = 1e-2                              # learning rate da MixFunn
 SCHED_GAMMA = 0.5                          # gamma do StepLR
-ITERS_PINN = 25000                         # iteracoes da PINN (mais profunda, demora pra convergir)
+ITERS_PINN = 25000                         # iteracoes Adam da PINN
 ITERS_MIX = 10000                          # iteracoes da MixFunn (converge cedo, depois oscila)
+LBFGS_OUTER = 60                           # passos externos de L-BFGS (so PINN, polimento)
 
 LAMBDA_IC = 100.0                          # peso da condicao inicial
 LAMBDA_BC = 100.0                          # peso das condicoes de contorno
@@ -158,6 +159,8 @@ def train_one(
     t0 = time.perf_counter()
     epochs_log, l2_curve, loss_curve = [], [], []
     pde_curve, ic_curve, bc_curve = [], [], []
+    best_l2 = float("inf")
+    best_state = None
 
     for ep in range(iterations + 1):
         if kind == "mix":
@@ -204,6 +207,10 @@ def train_one(
                 num = ((abs_p - abs_psi_ref) ** 2).sum()
                 den = (abs_psi_ref ** 2).sum() + 1e-12
                 l2 = float(np.sqrt(num / den))
+            if l2 < best_l2:
+                best_l2 = l2
+                best_state = {k: v.detach().clone()
+                              for k, v in net.state_dict().items()}
             epochs_log.append(ep)
             loss_curve.append(float(loss.item()))
             l2_curve.append(l2)
@@ -215,7 +222,54 @@ def train_one(
                   f"L2|psi|={l2:.3e} t={time.perf_counter()-t0:.0f}s",
                   flush=True)
 
+    ### --- Polimento L-BFGS (apenas PINN; unico experimento que usa L-BFGS) ---
+    if kind == "pinn":
+        opt_lbfgs = tc.optim.LBFGS(
+            net.parameters(), lr=1.0, max_iter=20, history_size=50,
+            line_search_fn="strong_wolfe",
+        )
+        x_lb = x_int_pool.detach().clone().requires_grad_(True)
+        t_lb = t_int_pool.detach().clone().requires_grad_(True)
+
+        def closure():
+            opt_lbfgs.zero_grad()
+            u, v = forward_uv(x_lb, t_lb)
+            u_x = grad(u, x_lb); u_t = grad(u, t_lb); u_xx = grad(u_x, x_lb)
+            v_x = grad(v, x_lb); v_t = grad(v, t_lb); v_xx = grad(v_x, x_lb)
+            mag2 = u * u + v * v
+            f_u = -v_t + 0.5 * u_xx + mag2 * u
+            f_v = u_t + 0.5 * v_xx + mag2 * v
+            lp = tc.mean(f_u ** 2) + tc.mean(f_v ** 2)
+            u_ic_p, v_ic_p = forward_uv(x_ic, t_ic)
+            li = tc.mean((u_ic_p - u_ic_ref) ** 2) + tc.mean((v_ic_p - v_ic_ref) ** 2)
+            u_bc_p, v_bc_p = forward_uv(x_bc, t_bc)
+            lb = tc.mean(u_bc_p ** 2) + tc.mean(v_bc_p ** 2)
+            l = lp + LAMBDA_IC * li + LAMBDA_BC * lb
+            l.backward()
+            return l
+
+        for outer in range(LBFGS_OUTER):
+            opt_lbfgs.step(closure)
+            with tc.no_grad():
+                oe = net(xy_eval)
+                ug = oe[:, 0:1].cpu().numpy().reshape(NX_EVAL, NT_EVAL)
+                vg = oe[:, 1:2].cpu().numpy().reshape(NX_EVAL, NT_EVAL)
+                ap = np.sqrt(ug ** 2 + vg ** 2)
+                l2 = float(np.sqrt(((ap - abs_psi_ref) ** 2).sum()
+                                   / ((abs_psi_ref ** 2).sum() + 1e-12)))
+            if l2 < best_l2:
+                best_l2 = l2
+                best_state = {k: v.detach().clone()
+                              for k, v in net.state_dict().items()}
+            if outer % 10 == 0:
+                print(f"[{label}] lbfgs outer={outer} L2|psi|={l2:.3e} "
+                      f"t={time.perf_counter()-t0:.0f}s", flush=True)
+
     wall = time.perf_counter() - t0
+
+    ### --- Restaura o melhor estado (best-checkpoint) antes da avaliacao final ---
+    if best_state is not None:
+        net.load_state_dict(best_state)
 
     ### --- Avaliacao final ---
     net.eval()
