@@ -20,7 +20,7 @@ NNinPhysics/
     └── Experiment_07/     # Magnetostática 2D — Baldan (Fig. 10)
 ```
 
-Cada experimento traz seu próprio `README.md` (problema, arquivos, comando de reprodução e tempo estimado).
+Cada experimento traz seu próprio `README.md` (problema, arquivos, comando de reprodução).
 
 ## Pré-requisitos
 

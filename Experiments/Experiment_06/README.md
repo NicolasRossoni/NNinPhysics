@@ -30,4 +30,3 @@ modal volume get tcc /checkpoints/exp_06 ./tmp_checkpoints
 python 3_analyze.py
 ```
 
-Tempo: ~25 min de wall-time em T4 (dois containers paralelos).
