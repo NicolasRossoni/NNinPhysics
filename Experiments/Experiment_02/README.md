@@ -44,6 +44,6 @@ modal volume get tcc /checkpoints/exp_02 ./tmp_checkpoints
 python 3_analyze.py
 ```
 
-Se o `modal` nao estiver no PATH: `~/.pyenv/versions/3.13.3/envs/venv/bin/modal`.
+Caso o comando `modal` não esteja no PATH, ative o ambiente virtual onde ele foi instalado.
 
 Tempo: ~25 min de wall-time em T4 (12 containers em paralelo). Custo estimado: ~$0,30.

@@ -16,7 +16,7 @@ Treino estritamente não-supervisionado (resíduo da EDP mais condições inicia
 ## Arquivos
 
 - `1_preprocess.py` — gera a referência espectral + RK4 e a amostragem Latin-Hypercube dos pontos de colocação. Salva tudo num `.npz` único em `tcc:/preprocess/exp_05/`.
-- `2_train.py` — treina PINN $6\times64$ e MixFunn-sof $3\times6$ em paralelo no Modal. Checkpoints em `tcc:/checkpoints/exp_05/`.
+- `2_train.py` — treina PINN $6\times64$ e MixFunn-sof $3\times3$ em paralelo no Modal. Checkpoints em `tcc:/checkpoints/exp_05/`.
 - `3_analyze.py` — baixa os checkpoints, calcula $L^2$ final e gera `burgers_v25.png` (três mapas de calor: referência | PINN | MixFunn$_{\rm sof}$).
 - `mixfunn.py` — camada Mix2Funn (não editar).
 

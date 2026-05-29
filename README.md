@@ -49,23 +49,25 @@ modal volume create tcc
 
 | Experimento | Tempo de wall-time | Custo aproximado |
 |---|---|---|
-| Experiment_01 | ~30–45 min | $0{,}50 |
-| Experiment_02 | ~20 min     | $0{,}20 |
-| Experiment_03 | ~25 min     | $0{,}30 |
-| Experiment_04 | ~60–90 min  | $1{,}00 |
-| Experiment_05 | ~15 min     | $0{,}15 |
-| Experiment_06 | ~30 min     | $0{,}30 |
-| Experiment_07 | ~30 min     | $0{,}30 |
-| **Total**     | **~4 h**    | **~$2{,}75** |
+| Experiment_01 | ~30–45 min (31 jobs) | $3–4 |
+| Experiment_02 | ~25 min     | $0,30 |
+| Experiment_03 | ~25 min     | $0,80 |
+| Experiment_04 | ~60–90 min  | $1,00 |
+| Experiment_05 | ~20 min     | $0,35 |
+| Experiment_06 | ~25 min     | $0,40 |
+| Experiment_07 | ~30 min     | $1,40 |
+| **Total**     | **~4 h**    | **~$7–8** |
 
-Reproduzir o repositório inteiro consome cerca de um décimo do crédito gratuito.
+Reproduzir o repositório inteiro cabe dentro do crédito gratuito da Modal.
 
 ## Padrão de uso
 
 ```bash
 cd Experiments/Experiment_05
-modal run run.py
-modal volume get tcc /final/burgers_v22 ./output
+modal run 1_preprocess.py
+modal run 2_train.py
+modal volume get tcc /checkpoints/exp_05 ./tmp_checkpoints
+python 3_analyze.py
 ```
 
 Cada pasta indica seu próprio caminho no volume Modal e os arquivos de pós-processamento (quando existem).
