@@ -20,7 +20,7 @@ NNinPhysics/
     └── Experiment_07/     # Magnetostática 2D — Baldan (Fig. 10)
 ```
 
-Cada experimento traz seu próprio `README.md` (problema, arquivos, comando de reprodução, tempo e custo estimados).
+Cada experimento traz seu próprio `README.md` (problema, arquivos, comando de reprodução e tempo estimado).
 
 ## Pré-requisitos
 
@@ -28,12 +28,7 @@ Todos os treinos rodam em containers efêmeros com GPU NVIDIA T4 na **Modal** (<
 
 ### Conta Modal (gratuita)
 
-Cadastre-se em <https://modal.com/signup>. Em maio de 2026, o *tier* gratuito oferecia:
-
-- **$5** em créditos para qualquer conta nova;
-- **$25 adicionais** ao registrar um meio de pagamento (totalizando **$30**). Configurar um *spending cap* de $30 evita qualquer cobrança real e mantém todo o crédito disponível.
-
-O orçamento total deste repositório (ver tabela abaixo) cabe folgadamente nesse limite.
+Cadastre-se em <https://modal.com/signup>. O *tier* gratuito da Modal é suficiente para reproduzir todos os experimentos deste repositório.
 
 ### Ambiente local
 
@@ -44,21 +39,6 @@ pip install modal torch numpy scipy matplotlib
 modal token new
 modal volume create tcc
 ```
-
-## Orçamento
-
-| Experimento | Tempo de wall-time | Custo aproximado |
-|---|---|---|
-| Experiment_01 | ~30–45 min (31 jobs) | $3–4 |
-| Experiment_02 | ~25 min     | $0,30 |
-| Experiment_03 | ~25 min     | $0,80 |
-| Experiment_04 | ~60–90 min  | $1,00 |
-| Experiment_05 | ~20 min     | $0,35 |
-| Experiment_06 | ~25 min     | $0,40 |
-| Experiment_07 | ~30 min     | $1,40 |
-| **Total**     | **~4 h**    | **~$7–8** |
-
-Reproduzir o repositório inteiro cabe dentro do crédito gratuito da Modal.
 
 ## Padrão de uso
 
@@ -72,9 +52,15 @@ python 3_analyze.py
 
 Cada pasta indica seu próprio caminho no volume Modal e os arquivos de pós-processamento (quando existem).
 
-## Créditos
+## Referências
 
-Detalhes de implementação, validação e literatura estão descritos no monograph (`monograph.pdf`, seções de Introdução, Materiais e Métodos, e Referências). A bibliografia canônica usada pelo trabalho aparece ao final do PDF.
+1. RAISSI, M.; PERDIKARIS, P.; KARNIADAKIS, G. E. Physics-informed neural networks: a deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. **Journal of Computational Physics**, v. 378, p. 686–707, 2019. Disponível em: https://doi.org/10.1016/j.jcp.2018.10.045.
+2. FARIAS, T. de S.; LIMA, G. G. de; MAZIERO, J.; VILLAS-BOAS, C. J. MixFunn: a neural network for differential equations with improved generalization and interpretability. **arXiv preprint arXiv:2503.22528**, 2025. Disponível em: https://arxiv.org/abs/2503.22528.
+3. GOODFELLOW, I.; BENGIO, Y.; COURVILLE, A. **Deep Learning**. Cambridge: MIT Press, 2016. Disponível em: https://www.deeplearningbook.org.
+4. RAISSI, M.; YAZDANI, A.; KARNIADAKIS, G. E. Hidden fluid mechanics: learning velocity and pressure fields from flow visualizations. **Science**, v. 367, n. 6481, p. 1026–1030, 2020. Disponível em: https://arxiv.org/abs/1808.04327.
+5. LI, Y. et al. ANEUMO: a high-quality dataset for aneurysm-related cerebral hemodynamics. **arXiv preprint arXiv:2505.14717**, 2025. Disponível em: https://arxiv.org/abs/2505.14717.
+6. NOHRA, M.; DUFOUR, S. Physics-informed neural networks for the numerical modeling of steady-state and transient electromagnetic problems with discontinuous media. **arXiv preprint arXiv:2406.04380**, 2024. Disponível em: https://arxiv.org/abs/2406.04380.
+7. MIRANDA, G. C. de; LIMA, G. G. de; FARIAS, T. de S. An introduction to neural networks for physicists. **arXiv preprint arXiv:2505.13042**, 2025. Disponível em: https://arxiv.org/abs/2505.13042.
 
 ## Autoria
 

@@ -29,4 +29,4 @@ modal volume get tcc /checkpoints/exp_05 ./tmp_checkpoints
 python 3_analyze.py
 ```
 
-Tempo: ~20 min de wall-time em T4 (duas redes em paralelo). Custo: ~$0{,}25.
+Tempo: ~20 min de wall-time em T4 (duas redes em paralelo).

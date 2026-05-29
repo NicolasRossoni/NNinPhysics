@@ -37,6 +37,6 @@ modal volume get tcc /checkpoints/exp_01 ./tmp_checkpoints
 python 3_analyze.py
 ```
 
-## Tempo e custo
+## Tempo
 
-31 jobs em paralelo no Modal T4. `ITER_T1 = 15000` (Tabela 1) e `ITER_T2 = 10000` (sweep). Wall-clock ~ 15–25 min por job; custo total ~ US\$ 3–5.
+31 jobs em paralelo no Modal T4. `ITER_T1 = 15000` (Tabela 1) e `ITER_T2 = 10000` (sweep). Wall-clock ~ 15–25 min por job.

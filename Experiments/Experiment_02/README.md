@@ -46,4 +46,4 @@ python 3_analyze.py
 
 Caso o comando `modal` não esteja no PATH, ative o ambiente virtual onde ele foi instalado.
 
-Tempo: ~25 min de wall-time em T4 (12 containers em paralelo). Custo estimado: ~$0,30.
+Tempo: ~25 min de wall-time em T4 (12 containers em paralelo).

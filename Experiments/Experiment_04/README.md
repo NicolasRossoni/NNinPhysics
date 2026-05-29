@@ -45,6 +45,5 @@ python 3_analyze.py
 ```
 
 Tempo: $\approx 60$–$90$ min de *wall-time* em T4 (até 9 contêineres em paralelo).
-Custo: $\approx$ \$1.
 
 Saída: `aneur_panel_3d.png` e `aneur_panel_plane.png` no diretório do experimento.

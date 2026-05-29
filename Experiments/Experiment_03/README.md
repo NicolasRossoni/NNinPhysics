@@ -57,4 +57,4 @@ done
 python 3_analyze.py
 ```
 
-Tempo: ~25 min de *wall-time* em T4. Custo: ~$0.30.
+Tempo: ~25 min de *wall-time* em T4.

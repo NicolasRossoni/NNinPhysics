@@ -49,4 +49,4 @@ modal volume get tcc /checkpoints/exp_07 ./tmp_checkpoints
 python 3_analyze.py
 ```
 
-Tempo: ~25–35 min de wall-time em T4 (dois containers em paralelo, Adam + L-BFGS). Custo: ~$0{,}30.
+Tempo: ~25–35 min de wall-time em T4 (dois containers em paralelo, Adam + L-BFGS).
