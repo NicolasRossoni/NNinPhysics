@@ -7,13 +7,13 @@
 Navier–Stokes incompressível 3D estacionário em geometria anatômica real
 (caso `AN4` do *dataset* ANEUMO, fator de vazão $m = 0{,}002$):
 
-$$\left\{\begin{array}{l}
+$$\begin{cases}
 \rho\,(\mathbf{u} \cdot \nabla)\mathbf{u} + \nabla p - \mu\,\nabla^{2}\mathbf{u} = 0, \\
 \nabla \cdot \mathbf{u} = 0, \\
 \mathbf{u}|_{\text{parede}} = 0, \quad
 \mathbf{u}|_{\text{entrada}} = \mathbf{u}_{\text{fis}}, \quad
 p|_{\text{saída}} = 0.
-\end{array}\right.$$
+\end{cases}$$
 
 Nuvem de pontos com $\approx 129\,000$ amostras de um paciente real
 ($\rho = 1060$ kg/m³, $\mu = 3{,}5\times 10^{-3}$ Pa·s, $\mathrm{Re} \sim 230$).

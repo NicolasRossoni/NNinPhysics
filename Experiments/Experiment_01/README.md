@@ -6,11 +6,11 @@
 
 Navier–Stokes incompressível 2D estacionário, com solução analítica fechada de Kovasznay:
 
-$$\left\{\begin{array}{l}
+$$\begin{cases}
 u\,u_x + v\,u_y = -p_x + \mathrm{Re}^{-1}\,(u_{xx} + u_{yy}), \\
 u\,v_x + v\,v_y = -p_y + \mathrm{Re}^{-1}\,(v_{xx} + v_{yy}), \\
 u_x + v_y = 0,
-\end{array}\right.
+\end{cases}
 \qquad \Omega = [-0{,}5;\,1] \times [-0{,}5;\,1{,}5], \quad \mathrm{Re} = 40.$$
 
 Solução analítica:

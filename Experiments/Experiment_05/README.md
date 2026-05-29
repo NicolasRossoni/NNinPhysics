@@ -4,11 +4,11 @@
 
 ## Problema
 
-$$\left\{\begin{array}{l}
+$$\begin{cases}
 u_t + u\,u_x = \nu\,u_{xx}, \\
 u(x, 0) = -\sin(\pi x), \\
 u(\pm 1, t) = 0,
-\end{array}\right.
+\end{cases}
 \qquad \nu = 0{,}01/\pi, \quad x \in [-1, 1], \quad t \in [0, 1].$$
 
 Treino estritamente não-supervisionado (resíduo da EDP mais condições inicial e de contorno; sem termo de regressão). A solução de referência é gerada por pseudo-espectral Fourier ($N = 256$) com integração temporal Runge–Kutta de quarta ordem ($\Delta t = 10^{-4}$) e depois interpolada para a grade de avaliação $200 \times 100$.

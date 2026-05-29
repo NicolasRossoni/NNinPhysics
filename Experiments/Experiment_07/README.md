@@ -15,16 +15,16 @@
 
 ## Problema
 
-$$\left\{\begin{array}{l}
+$$\begin{cases}
 \nabla \times \mathbf{H} = 0, \\
 \nabla \cdot (\mu\,\mathbf{H}) = 0, \\
 \mathbf{H}|_{\partial\Omega} = (0, 0, 1),
-\end{array}\right.
+\end{cases}
 \qquad
-\mu_r = \left\{\begin{array}{l}
+\mu_r = \begin{cases}
 3, \ \|(x,z) - (0{,}5;\, 0{,}5)\| < 0{,}2, \\
 1, \ \text{caso contrário}.
-\end{array}\right.$$
+\end{cases}$$
 
 Condição de contorno imposta exatamente por uma função de *lift* $\mathbf{H}(x) = f(x)\,d_0(x) + V(x)$, com $V = (0,1)$ e $d_0 = 1 - \exp(-10\,d_{\partial\Omega})$. Treino não-supervisionado (apenas resíduo da EDP). A referência numérica é obtida por diferenças finitas sobre o potencial escalar magnético, resolvendo $\nabla\cdot(\mu\,\nabla\phi) = 0$ com $\phi = -z$ no bordo.
 

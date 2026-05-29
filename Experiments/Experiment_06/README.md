@@ -4,11 +4,11 @@
 
 ## Problema
 
-$$\left\{\begin{array}{l}
+$$\begin{cases}
 i\,\psi_t + \tfrac{1}{2}\,\psi_{xx} + |\psi|^2\,\psi = 0, \\
 \psi(x, 0) = 2\,\mathrm{sech}(x), \\
 \psi(\pm 5, t) = 0,
-\end{array}\right. \qquad t \in [0,\, \pi/2].$$
+\end{cases} \qquad t \in [0,\, \pi/2].$$
 
 Rede de duas saídas $(\Re\psi,\, \Im\psi)$; treino não-supervisionado (resíduo da EDP + penalidade da condição inicial + penalidade das condições de contorno). A referência numérica é obtida por integração split-step Fourier de Strang ($N=512$ modos, $\Delta t = 5 \times 10^{-5}$).
 
