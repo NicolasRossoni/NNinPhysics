@@ -56,11 +56,21 @@ Cada pasta indica seu próprio caminho no volume Modal e os arquivos de pós-pro
 
 1. RAISSI, M.; PERDIKARIS, P.; KARNIADAKIS, G. E. Physics-informed neural networks: a deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. **Journal of Computational Physics**, v. 378, p. 686–707, 2019. Disponível em: https://doi.org/10.1016/j.jcp.2018.10.045.
 2. FARIAS, T. de S.; LIMA, G. G. de; MAZIERO, J.; VILLAS-BOAS, C. J. MixFunn: a neural network for differential equations with improved generalization and interpretability. **arXiv preprint arXiv:2503.22528**, 2025. Disponível em: https://arxiv.org/abs/2503.22528.
-3. GOODFELLOW, I.; BENGIO, Y.; COURVILLE, A. **Deep Learning**. Cambridge: MIT Press, 2016. Disponível em: https://www.deeplearningbook.org.
+3. LECUN, Y.; BENGIO, Y.; HINTON, G. Deep learning. **Nature**, v. 521, p. 436–444, 2015. Disponível em: https://doi.org/10.1038/nature14539.
 4. RAISSI, M.; YAZDANI, A.; KARNIADAKIS, G. E. Hidden fluid mechanics: learning velocity and pressure fields from flow visualizations. **Science**, v. 367, n. 6481, p. 1026–1030, 2020. Disponível em: https://arxiv.org/abs/1808.04327.
 5. LI, Y. et al. ANEUMO: a high-quality dataset for aneurysm-related cerebral hemodynamics. **arXiv preprint arXiv:2505.14717**, 2025. Disponível em: https://arxiv.org/abs/2505.14717.
 6. NOHRA, M.; DUFOUR, S. Physics-informed neural networks for the numerical modeling of steady-state and transient electromagnetic problems with discontinuous media. **arXiv preprint arXiv:2406.04380**, 2024. Disponível em: https://arxiv.org/abs/2406.04380.
 7. MIRANDA, G. C. de; LIMA, G. G. de; FARIAS, T. de S. An introduction to neural networks for physicists. **arXiv preprint arXiv:2505.13042**, 2025. Disponível em: https://arxiv.org/abs/2505.13042.
+8. HORNIK, K.; STINCHCOMBE, M.; WHITE, H. Multilayer feedforward networks are universal approximators. **Neural Networks**, v. 2, n. 5, p. 359–366, 1989. Disponível em: https://doi.org/10.1016/0893-6080(89)90020-8.
+9. GOLDBERG, D. E.; HOLLAND, J. H. Genetic algorithms and machine learning. **Machine Learning**, v. 3, p. 95–99, 1988. Disponível em: https://doi.org/10.1023/A:1022602019183.
+10. KIRKPATRICK, S.; GELATT, C. D.; VECCHI, M. P. Optimization by simulated annealing. **Science**, v. 220, n. 4598, p. 671–680, 1983. Disponível em: https://doi.org/10.1126/science.220.4598.671.
+11. KINGMA, D. P.; BA, J. Adam: a method for stochastic optimization. **arXiv preprint arXiv:1412.6980**, 2014. Disponível em: https://arxiv.org/abs/1412.6980.
+12. KOVASZNAY, L. I. G. Laminar flow behind a two-dimensional grid. **Mathematical Proceedings of the Cambridge Philosophical Society**, v. 44, n. 1, p. 58–62, 1948. Disponível em: https://doi.org/10.1017/S0305004100023999.
+13. BUTCHER, J. C. A history of Runge-Kutta methods. **Applied Numerical Mathematics**, v. 20, n. 3, p. 247–260, 1996. Disponível em: https://doi.org/10.1016/0168-9274(95)00108-5.
+14. CUOMO, S. et al. Scientific machine learning through physics-informed neural networks: where we are and what's next. **arXiv preprint arXiv:2201.05624**, 2022. Disponível em: https://arxiv.org/abs/2201.05624.
+15. CAI, S.; MAO, Z.; WANG, Z.; YIN, M.; KARNIADAKIS, G. E. Physics-informed neural networks (PINNs) for fluid mechanics: a review. **Acta Mechanica Sinica**, v. 37, n. 12, p. 1727–1738, 2021. Disponível em: https://arxiv.org/abs/2105.09506.
+16. SUKUMAR, N.; SRIVASTAVA, A. Exact imposition of boundary conditions with distance functions in physics-informed deep neural networks. **Computer Methods in Applied Mechanics and Engineering**, v. 389, 114333, 2022. Disponível em: https://arxiv.org/abs/2104.08426.
+17. LU, L.; MENG, X.; MAO, Z.; KARNIADAKIS, G. E. DeepXDE: a deep learning library for solving differential equations. **SIAM Review**, v. 63, n. 1, p. 208–228, 2021. Disponível em: https://arxiv.org/abs/1907.04502.
 
 ## Autoria
 
